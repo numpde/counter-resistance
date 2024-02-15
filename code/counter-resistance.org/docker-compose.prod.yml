@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+  photoveto:
+    container_name: counter-resistance
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    expose:
+      - 4242
+    environment:
+      - PORT=4242
+      - DJANGO_DEBUG=0
+      - DJANGO_SECRET=${DJANGO_SECRET_KEY}
+      - LETSENCRYPT_HOST=$HOST
+      - VIRTUAL_HOST=$HOST
+      - VIRTUAL_PORT=4242
+      - VIRTUAL_PATH=/
+      - VIRTUAL_DEST=/
+    networks:
+      - nginxproxy_network
+    mem_limit: 100M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 1m
+        max-file: "10"
+
+networks:
+  nginxproxy_network:
+    external: true

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+    <title>{{ title }}</title>
+
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.green.min.css"
+    />
+
+    <style>
+        html {
+            font-size: 150%;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div>
+        <div id="content">
+            {{ html_content|safe }}
+        </div>
+    </div>
+</main>
+<footer>
+    <small>
+        <div>
+            <a href="mailto:hello@counter-resistance.org">hello@counter-resistance.org</a>
+        </div>
+        <div>
+            <a href="/">CounterResistance</a> (2024-Feb)
+        </div>
+    </small>
+</footer>
+</body>
+</html>
