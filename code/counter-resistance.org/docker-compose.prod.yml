@@ -1,7 +1,7 @@
 version: '2'
 
 services:
-  photoveto:
+  counter_resistance:
     container_name: counter-resistance
     build:
       context: .
@@ -12,7 +12,7 @@ services:
     environment:
       - PORT=4242
       - DJANGO_DEBUG=0
-      - DJANGO_SECRET=${DJANGO_SECRET_KEY}
+      - DJANGO_SECRET=${DJANGO_SECRET}
       - LETSENCRYPT_HOST=$HOST
       - VIRTUAL_HOST=$HOST
       - VIRTUAL_PORT=4242

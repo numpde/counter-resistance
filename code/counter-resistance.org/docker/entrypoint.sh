@@ -35,7 +35,4 @@ python manage.py collectstatic --noinput --clear
 
 # Start Gunicorn server (or another WSGI server)
 echo "Starting Gunicorn server..."
-gunicorn photoveto.wsgi:application --bind 0.0.0.0:"$PORT"
-
-# Note: Replace 'project.wsgi:application' with the appropriate WSGI application reference
-# for your project, and set the $PORT environment variable in your Docker configuration.
+gunicorn project.wsgi:application --bind 0.0.0.0:"$PORT"
