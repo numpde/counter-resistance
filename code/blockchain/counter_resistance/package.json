@@ -11,7 +11,12 @@
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.0.3",
     "hardhat": "^2.20.1",
     "mocha": "^10.3.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts-upgradeable": "^5.0.1"
   }
 }
