@@ -56,6 +56,7 @@ describe("DatasetRegistry", function () {
             expect(await datasetRegistry.hasRole(await datasetRegistry.DEFAULT_ADMIN_ROLE(), deployer.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), deployer.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_UPGRADER_ROLE(), deployer.address)).to.equal(true);
+            expect(await datasetRegistry.hasRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE(), deployer.address)).to.equal(true);
         });
     });
 
@@ -162,25 +163,9 @@ describe("DatasetRegistry", function () {
                 datasetRegistry, "AccessControlUnauthorizedAccount"
             );
         });
-
-        it("Should enumerate datasets submitted by a specific contributor", async () => {
-            const {contributor} = await getSigners();
-            const {datasetRegistry} = await deployDatasetRegistryFixture();
-
-            const expectedTokenIds = [1n, 2n, 3n];
-
-            for (let i = 0; i < expectedTokenIds.length; i++) {
-                await datasetRegistry.connect(contributor).submitDataset(`testURI#${i}`);
-            }
-
-            for (let i = 0; i < expectedTokenIds.length; i++) {
-                const tokenId = await datasetRegistry.tokenOfOwnerByIndex(contributor.address, i);
-                expect(tokenId).to.equal(expectedTokenIds[i]);
-            }
-        });
     });
 
-    describe("Dataset URI Management", function () {
+    describe("Dataset URI management", function () {
         it("Should allow a contributor to set the URI for their own dataset", async () => {
             const {contributor} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
@@ -246,8 +231,73 @@ describe("DatasetRegistry", function () {
         });
     });
 
+    describe("Role management", () => {
+        it("Should allow DEFAULT_ADMIN_ROLE to grant CONTRIBUTOR_ROLE", async () => {
+            const {deployer, contributor} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
 
-    describe("Pausing Functionality", function () {
+            await datasetRegistry.grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
+
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.be.true;
+        });
+
+        it("Should prevent non-admins from granting CONTRIBUTOR_ROLE", async () => {
+            const {nonContributor, expertContributor} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            await expect(
+                datasetRegistry.connect(expertContributor).grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), nonContributor.address)
+            ).to.be.revertedWithCustomError(
+                datasetRegistry,
+                "AccessControlUnauthorizedAccount"
+            );
+
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), nonContributor.address)).to.be.false;
+        });
+
+        it("Should allow DEFAULT_ADMIN_ROLE to revoke CONTRIBUTOR_ROLE", async () => {
+            const {deployer, contributor} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            // First, grant the role, then revoke it
+            await datasetRegistry.grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
+            await datasetRegistry.revokeRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
+
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.be.false;
+        });
+
+        it("Should restrict role revocation to DEFAULT_ADMIN_ROLE", async () => {
+            const {deployer, contributor, third} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            // Grant the role using deployer, then attempt revocation by a non-admin
+            await datasetRegistry.grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
+            await expect(
+                datasetRegistry.connect(third).revokeRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address)
+            ).to.be.revertedWithCustomError(
+                datasetRegistry,
+                "AccessControlUnauthorizedAccount"
+            );
+
+            // Verify the role was not revoked
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.equal(true);
+        });
+
+        it("Should allow transferring DEFAULT_ADMIN_ROLE", async () => {
+            const {deployer, third} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            await datasetRegistry.grantRole(await datasetRegistry.DEFAULT_ADMIN_ROLE(), third.address);
+            await datasetRegistry.renounceRole(await datasetRegistry.DEFAULT_ADMIN_ROLE(), deployer.address);
+
+            // Verify the new admin has the role and the original deployer does not
+            expect(await datasetRegistry.hasRole(await datasetRegistry.DEFAULT_ADMIN_ROLE(), third.address)).to.be.true;
+            expect(await datasetRegistry.hasRole(await datasetRegistry.DEFAULT_ADMIN_ROLE(), deployer.address)).to.be.false;
+        });
+
+    });
+
+    describe("Pausing Functionality", () => {
         it("Should pause and prevent dataset submission/manipulation", async function () {
             const {pauser, contributor, expertContributor} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
@@ -301,18 +351,37 @@ describe("DatasetRegistry", function () {
         });
     });
 
-    describe("Enumerable Extension", function () {
-        it("Should accurately report the total supply of minted datasets");
-        it("Should list all datasets owned by an account");
+    describe("Enumerable extension", function () {
+        it("Should enumerate datasets", async () => {
+            const {contributor} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            const expectedTokenIds = [1n, 2n, 3n];
+
+            // Submit some datasets
+            for (let i = 0; i < expectedTokenIds.length; i++) {
+                await datasetRegistry.connect(contributor).submitDataset(`testURI#${i}`);
+            }
+
+            // Total supply
+            expect(await datasetRegistry.totalSupply()).to.equal(expectedTokenIds.length);
+
+            // By owner
+            for (let i = 0; i < expectedTokenIds.length; i++) {
+                const tokenId = await datasetRegistry.tokenOfOwnerByIndex(contributor.address, i);
+                expect(tokenId).to.equal(expectedTokenIds[i]);
+            }
+
+            // Owner-agnostic
+            for (let i = 0; i < expectedTokenIds.length; i++) {
+                const tokenId = await datasetRegistry.tokenByIndex(i);
+                expect(tokenId).to.equal(expectedTokenIds[i]);
+            }
+        });
     });
 
     describe("Upgradeability", function () {
         it("Should allow contract upgrades by an account with UPGRADER_ROLE");
         it("Should prevent contract upgrades by unauthorized accounts");
-    });
-
-    describe("Access Control and Permissions", function () {
-        it("Should enforce role-based permissions for dataset management actions");
-        it("Should allow role management (granting/revoking roles) by accounts with DEFAULT_ADMIN_ROLE");
     });
 });
