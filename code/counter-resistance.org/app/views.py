@@ -6,14 +6,14 @@ from django.conf import settings
 from django.shortcuts import render
 
 from markdown import markdown
-
+from markdown.extensions.toc import TocExtension
 
 def _get_content(filename: str):
     md_file_path = Path(settings.BASE_DIR) / "app" / "content" / filename
 
     try:
         with md_file_path.open('r') as file:
-            return markdown(file.read(), extensions=['toc'])
+            return markdown(file.read(), extensions=[TocExtension(baselevel=1, toc_depth=1)])
     except FileNotFoundError:
         return "<p>Markdown file not found.</p>"
 
