@@ -13,7 +13,7 @@ def _get_content(filename: str):
 
     try:
         with md_file_path.open('r') as file:
-            return markdown(file.read())
+            return markdown(file.read(), extensions=['toc'])
     except FileNotFoundError:
         return "<p>Markdown file not found.</p>"
 
