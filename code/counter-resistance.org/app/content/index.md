@@ -1,17 +1,18 @@
-# Counter-Resistance
 
-Antimicrobial Resistance (AMR) is a global threat requiring collective action by creating a secure, transparent data-sharing platform and leveraging analytics to forecast and respond to AMR threats. Recognizing the interdependence of global health systems, we aim to create incentives for wealthier institutions to support those with fewer resources, ensuring the collective good is served through comprehensive AMR surveillance and response.
+<div style="position: relative; text-align: center; color: white;">
+  <img src="/static/app/banner.png" width="100%" style="display: block;">
+  <div style="color: darkred; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5vw; font-weight: bold; white-space: nowrap; width: 80%;">
+    Counter-Resistance
+  </div>
+</div>
+
+# 
+
+<font style="color: darkred;">Antimicrobial Resistance</font> (AMR) is a global threat requiring collective action by creating a secure, transparent data-sharing platform and leveraging analytics to forecast and respond to AMR threats. Recognizing the interdependence of global health systems, we aim to create incentives for wealthier institutions to support those with fewer resources, ensuring the collective good is served through comprehensive AMR surveillance and response.
 
 ## Mission
 
-To combat the rising threat of Antimicrobial Resistance (AMR) by fostering a unified global network that prioritizes secure data exchange, predictive analytics, and collaborative action. Our mission is to empower every corner of the globe, from well-resourced institutions to those in the most resource-limited settings, with the tools and insights needed to collect, predict, prevent, and counteract AMR. Through innovation, transparency, and shared responsibility, we are dedicated to safeguarding public health and ensuring a future where antibiotics remain effective.
-
-## Strategy
-- **Accessibility**: Making the platform accessible to all institutions, bridging gaps between diverse resource levels.
-- **Collaboration**: Uniting stakeholders from various fields to enhance global AMR surveillance and response.
-
-## Commitment
-To develop a holistic solution that addresses AMR challenges, fostering a global community committed to public health.
+To combat the rising threat of Antimicrobial Resistance by fostering a unified global network that prioritizes secure data exchange, predictive analytics, and collaborative action. Our mission is to empower every corner of the globe, from well-resourced institutions to those in the most resource-limited settings, with the tools and insights needed to collect, predict, prevent, and counteract AMR. Through innovation, transparency, and shared responsibility, we are dedicated to safeguarding public health and ensuring a future where antibiotics remain effective.
 
 ## Join us
 We're looking for passionate individuals committed to making a difference, for example:

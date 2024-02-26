@@ -22,7 +22,7 @@ def index(request):
     # url = request.build_absolute_uri().replace("http:", "https:")
 
     context = {
-        'title': "Counter-resistance",
+        'title': "counter-resistance.org",
         'html_content': _get_content("index.md"),
     }
 
