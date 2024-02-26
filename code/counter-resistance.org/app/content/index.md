@@ -1,12 +1,12 @@
 
 <div style="position: relative; text-align: center; color: white;">
-  <img src="/static/app/banner.png" width="100%" style="display: block;">
+  <img src="/static/app/banner.png" width="100%" style="display: block; -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 20%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0) 100%); mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 20%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0) 100%);">
+
   <div style="color: darkred; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5vw; font-weight: bold; white-space: nowrap; width: 80%;">
     Counter-Resistance
   </div>
 </div>
 
-<br>
 
 <font style="color: darkred;">Antimicrobial resistance</font> (AMR) is a global threat requiring collective action by creating a secure, transparent data-sharing platform and leveraging analytics to forecast and respond to AMR threats. Recognizing the interdependence of global health systems, we aim to create incentives for wealthier institutions to support those with fewer resources, ensuring the collective good is served through comprehensive AMR surveillance and response.
 
@@ -15,7 +15,30 @@
 
 # Our Mission
 
-Our mission is to combat the rising threat of antimicrobial resistance by fostering a unified global network that prioritizes secure data exchange, predictive analytics, and collaborative action. Our mission is to empower every corner of the globe, from well-resourced institutions to those in the most resource-limited settings, with the tools and insights needed to collect, predict, prevent, and counteract AMR. Through innovation, transparency, and shared responsibility, we are dedicated to safeguarding public health and ensuring a future where antibiotics remain effective.
+Our mission is to combat the rising threat of antimicrobial resistance by fostering a unified global network that prioritizes secure data exchange, predictive analytics, and collaborative action. 
+To empower every corner of the globe, from well-resourced institutions to those in the most resource-limited settings, with the tools and insights needed to collect, predict, prevent, and counteract AMR. Through innovation, transparency, and shared responsibility, we are dedicated to safeguarding public health and ensuring a future where antibiotics remain effective.
+
+
+# Our Vision for the AMR Platform
+
+We are committed to addressing the critical challenge of antimicrobial resistance by harnessing the collective power of global data. Our aim is not merely to collect data but to forge a unified front against AMR that enables research, informs policy, and guides clinical decisions. Below outlines our strategy and the role of blockchain in achieving our vision.
+
+- **We aim to foster global collaboration**: Recognizing that AMR is a global challenge, we plan to collect diverse data sets from across the world, making them accessible in one location for comprehensive analysis and action.
+- **We plan to enable data-driven decisions**: By aggregating extensive AMR data, we aim to empower healthcare professionals, researchers, and policymakers with the information needed to make informed decisions that improve health outcomes and optimize antibiotic use.
+- **We intend to spur innovation and research**: Through providing a rich dataset for analysis, our platform seeks to ignite innovation, aiding in the development of new treatments, diagnostics, and strategies to combat AMR.
+
+Integrating blockchain technology enhances the platform's functionality as part of a broader ecosystem, contributing to:
+
+- **Trust and Transparency**: We utilize blockchain to ensure that data submissions are transparent and verifiable, building trust among users in the data's integrity and origin.
+- **Security**: Leveraging the decentralized nature of blockchain, we aim to secure the data against unauthorized alterations and breaches, eliminating central points of failure.
+- **Efficiency**: We plan to employ smart contracts to automate processes like data submission and validation, streamlining operations and minimizing human error.
+
+While blockchain is instrumental, our comprehensive approach to combating AMR includes:
+
+- **Off-Chain Data Storage**: To efficiently manage large datasets, we intend to store the bulk of our data off-chain, ensuring the platform's scalability and accessibility without compromising performance.
+- **Community and Collaboration**: We are dedicated to building a community around the AMR platform, incorporating reputation management and contributor validation mechanisms to foster high-quality data submissions and sustained user engagement.
+- **Incentives for Contribution**: Acknowledging the critical need for continuous data contribution, we have developed incentive mechanisms to encourage regular submissions, keeping the platform current and relevant.
+
 
 # The Societal Impact
 
@@ -103,6 +126,22 @@ While the AMR platform aims to make significant strides in combating antimicrobi
 - **Economic Concerns**: The potential financial burden of AMR surveillance and management efforts, particularly in areas with limited resources.
     
     Highlighting the cost-saving potential of early AMR detection and management, we are dedicated to demonstrating the platform's value. Our initiatives to secure supportive funding are designed to make solutions accessible in the most affected regions.
+
+
+# FAQ
+
+- **What is the AMR platform?** The AMR platform is a global initiative designed to collect, analyze, and share data on antimicrobial resistance (AMR), facilitating research and informing public health strategies.
+- **How does the AMR platform work?** It aggregates AMR data from healthcare institutions, laboratories, and environmental sources worldwide, using blockchain technology to ensure data integrity and security.
+- **Who can contribute data to the platform?** Healthcare providers, researchers, environmental scientists, and any institutions engaged in AMR surveillance are encouraged to contribute data.
+- **Is my data safe on the platform?** Yes, we employ state-of-the-art encryption and anonymization techniques to protect all data on the platform, adhering to strict global data privacy regulations.
+- **How can I access the AMR data?** Access is granted to researchers, healthcare professionals, and policy-makers through a controlled application process, ensuring data is used responsibly for public health purposes.
+- **What kind of insights can be gained from the platform?** The platform provides insights into AMR trends, resistance mechanisms, and the effectiveness of antibiotics, helping to guide treatment decisions and inform public health policies.
+- **How does the platform benefit healthcare professionals?** It offers real-time data on AMR patterns, supporting clinical decision-making and antibiotic stewardship efforts in healthcare settings.
+- **Can the platform help predict AMR outbreaks?** Yes, by analyzing data trends, the platform can help forecast potential AMR outbreaks, enabling proactive public health responses.
+- **What is the role of blockchain technology in the platform?** Blockchain ensures the integrity and transparency of data on the platform, facilitating secure, tamper-proof data sharing across the global AMR community.
+- **How is the platform funded?** Funding comes from a mix of governmental grants, philanthropic contributions, and partnerships with public and private sector organizations committed to combating AMR.
+- **How can I get involved or contribute to the platform?** Interested parties can apply through our website to contribute data, access the data for research, or support the platform through funding and collaboration opportunities.
+
 
 # Join us
 
