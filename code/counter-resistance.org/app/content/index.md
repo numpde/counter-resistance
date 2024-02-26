@@ -13,7 +13,7 @@
 [TOC]
 
 
-Our # Mission
+# Our Mission
 
 Our mission is to combat the rising threat of antimicrobial resistance by fostering a unified global network that prioritizes secure data exchange, predictive analytics, and collaborative action. Our mission is to empower every corner of the globe, from well-resourced institutions to those in the most resource-limited settings, with the tools and insights needed to collect, predict, prevent, and counteract AMR. Through innovation, transparency, and shared responsibility, we are dedicated to safeguarding public health and ensuring a future where antibiotics remain effective.
 
