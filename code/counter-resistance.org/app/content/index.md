@@ -130,7 +130,7 @@ While the AMR platform aims to make significant strides in combating antimicrobi
 
 # Leveraging AI and Smart LLMs
 
-At the forefront of our mission to combat antimicrobial resistance (AMR), we recognize the transformative power of Artificial Intelligence (AI), particularly Large Language Models (LLMs). Here's how we aim to integrate these technologies into our platform and our intentions for future-proofing our ecosystem:
+At the forefront of our mission to combat antimicrobial resistance, we recognize the transformative power of Artificial Intelligence (AI), particularly Large Language Models (LLMs). Here's how we aim to integrate these technologies into our platform and our intentions for future-proofing our ecosystem:
 
 - **Automated Analysis for Real-time Insights**. We aim to harness AI for the automated analysis of AMR data, extracting critical insights, trends, and patterns to support informed decision-making and policy development.
 - **Simplifying Interactions Through Natural Language**. We intend to implement LLMs to facilitate natural language processing for data entry and querying, enhancing accessibility and user engagement with our platform.
