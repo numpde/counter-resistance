@@ -15,6 +15,6 @@ contract DatasetRegistry is RegistryBase {
         RegistryBase.initialize();
 
         // Reinitialize with specific name and symbol
-        __ERC721_init("Dataset Registry", "DATA");
+        __ERC721_init("Dataset registry", "DATA");
     }
 }
