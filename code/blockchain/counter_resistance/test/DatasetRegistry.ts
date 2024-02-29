@@ -19,6 +19,7 @@ async function deployDatasetRegistryFixture() {
         {initializer: 'initialize'}
     );
 
+    // Roles assigned during fixture [*]
     await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), pauser.address);
     await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
     await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address);
@@ -32,6 +33,7 @@ describe("DatasetRegistry", function () {
             const {contributor, expertContributor, pauser} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
+            // [*] See "Roles assigned during fixture"
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), pauser.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address)).to.equal(true);
@@ -42,7 +44,7 @@ describe("DatasetRegistry", function () {
         it("Should initialize with the correct name and symbol", async function () {
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
-            const expectedName = "Dataset Registry";
+            const expectedName = "Dataset registry";
             const expectedSymbol = "DATA";
 
             expect(await datasetRegistry.name()).to.equal(expectedName);
@@ -56,7 +58,8 @@ describe("DatasetRegistry", function () {
             expect(await datasetRegistry.hasRole(await datasetRegistry.DEFAULT_ADMIN_ROLE(), deployer.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), deployer.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_UPGRADER_ROLE(), deployer.address)).to.equal(true);
-            expect(await datasetRegistry.hasRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE(), deployer.address)).to.equal(true);
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE_MANAGER(), deployer.address)).to.equal(true);
+            expect(await datasetRegistry.hasRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE_MANAGER(), deployer.address)).to.equal(true);
         });
     });
 
@@ -68,7 +71,7 @@ describe("DatasetRegistry", function () {
             const uri = "https://example.com/dataset";
             const expectedTokenId = 1;
 
-            const tx = await datasetRegistry.connect(expertContributor).contributeFor(third.address, uri);
+            const tx = await datasetRegistry.connect(expertContributor).contribute(third.address, uri);
             const receipt = await tx.wait();
 
             const transferLog = receipt.logs.find((log: EventLog) => log.fragment.name === 'Transfer');
@@ -109,9 +112,10 @@ describe("DatasetRegistry", function () {
 
             const uri = "https://example.com/dataset";
 
-            // Attempt to `contribute` using the expertContributor signer (instead of `contributeFor`)
+            // Attempt to `contribute` using the expertContributor signer
             const attemptSubmit = datasetRegistry.connect(expertContributor).contribute(uri);
 
+            // TODO
             await expect(attemptSubmit).to.be.revertedWithCustomError(datasetRegistry, "AccessControlUnauthorizedAccount");
         });
 
