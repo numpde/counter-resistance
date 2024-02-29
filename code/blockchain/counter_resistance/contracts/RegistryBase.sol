@@ -247,6 +247,42 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
     {}
 
     //
+    // Customization overrides.
+    //
+
+    /**
+     * @dev Override _isAuthorized to include a role check for expert contributors.
+     * This function assumes that `owner` is the actual owner of `tokenId` and does not verify this
+     * assumption. It returns true if `spender` is allowed to manage the token.
+     *
+     * Only expert contributors are allowed to transfer NFTs, adhering to the logic that
+     * being the owner and the original contributor, and having the EXPERT_CONTRIBUTOR_ROLE,
+     * grants the right to transfer the ownership.
+     * Regular contributors, even if they are original contributors, are not allowed to transfer.
+     *
+     * @param owner The owner of the token.
+     * @param spender The address attempting to operate on the token.
+     * @param tokenId The ID of the token in question.
+     * @return A boolean indicating whether the spender is authorized to manage the token.
+     */
+    function _isAuthorized(address owner, address spender, uint256 tokenId) internal view virtual override returns (bool) {
+        bool isOwner = (owner == spender);
+        bool isOriginalContributor = (_originalContributor[tokenId] == spender);
+
+        // Directly authorize the transfer if all are true:
+        // 1. The spender is the owner of the token,
+        // 2. The spender is the original contributor of the token, and
+        // 3. The spender has the EXPERT_CONTRIBUTOR_ROLE.
+        if (isOwner && isOriginalContributor) {
+            return hasRole(EXPERT_CONTRIBUTOR_ROLE, spender);
+        }
+
+        // Prevent any form of delegated transfer authority, to disallow
+        // contributors from authorizing others to transfer their contributions.
+        return false;
+    }
+
+    //
     // Overrides required by Solidity.
     //
 
