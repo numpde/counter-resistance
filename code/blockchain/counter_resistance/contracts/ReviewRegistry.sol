@@ -5,7 +5,7 @@ import "./RegistryBase.sol";
 
 /**
  * @title ReviewRegistry
- * @dev Extends RegistryBase to manage reviews. A "contribution" and a "review" a synonymous here.
+ * @dev Extends RegistryBase to manage reviews. A "contribution" and a "review" are synonymous here.
  */
 contract ReviewRegistry is RegistryBase {
     struct ReviewTarget {
