@@ -64,25 +64,25 @@ describe("DatasetRegistry", function () {
     });
 
     describe("Dataset submission", function () {
-        it("Should allow an expert contributor to submit a dataset and emit a 'Transfer' event", async () => {
+        it("Should allow an expert contributor to submit a dataset and emit a 'Contribution' event", async () => {
             const {expertContributor, third} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             const uri = "https://example.com/dataset";
             const expectedTokenId = 1;
 
-            const tx = await datasetRegistry.connect(expertContributor).contribute(third.address, uri);
+            const tx = await datasetRegistry.connect(expertContributor).contributeFor(third.address, uri);
             const receipt = await tx.wait();
 
-            const transferLog = receipt.logs.find((log: EventLog) => log.fragment.name === 'Transfer');
+            const transferLog = receipt.logs.find((log: EventLog) => (log.fragment.name === 'Contribution'));
             expect(transferLog).not.to.be.undefined;
 
-            const iface = new ethers.Interface(["event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"]);
-            const {from, to, tokenId} = (iface.parseLog(transferLog) as LogDescription).args;
+            const iface = new ethers.Interface(["event Contribution(address indexed by, address indexed to, uint256 indexed contributionId, string uri)"]);
+            const {by, to, contributionId} = (iface.parseLog(transferLog) as LogDescription).args;
 
+            expect(by).to.equal(expertContributor.address);
             expect(to).to.equal(third.address);
-            expect(from).to.equal(ZeroAddress);
-            expect(tokenId).to.equal(1n);
+            expect(contributionId).to.equal(1n);
         });
 
         it("Should allow a contributor to submit their own dataset and emit a 'Transfer' event", async () => {
@@ -106,17 +106,18 @@ describe("DatasetRegistry", function () {
             expect(tokenId).to.equal(expectedTokenId);
         });
 
-        it("Should not allow an expert contributor to use `submitDataset`", async () => {
-            const {expertContributor} = await getSigners();
+        it("Should allow also an expert contributor to contribute", async () => {
+            const {deployer, expertContributor} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            // First, remove the "contributor" role
+            await datasetRegistry.connect(deployer).revokeRole(await datasetRegistry.CONTRIBUTOR_ROLE(), expertContributor.address);
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), expertContributor.address)).to.be.false;
 
             const uri = "https://example.com/dataset";
 
-            // Attempt to `contribute` using the expertContributor signer
             const attemptSubmit = datasetRegistry.connect(expertContributor).contribute(uri);
-
-            // TODO
-            await expect(attemptSubmit).to.be.revertedWithCustomError(datasetRegistry, "AccessControlUnauthorizedAccount");
+            await expect(attemptSubmit).to.not.be.reverted;
         });
 
         it("Should assign ownership and URI correctly to a contributor", async () => {
@@ -152,19 +153,19 @@ describe("DatasetRegistry", function () {
             await expect(
                 datasetRegistry.connect(third).contribute("https://example.com/illicit-dataset")
             ).to.be.revertedWithCustomError(
-                datasetRegistry, "AccessControlUnauthorizedAccount"
+                datasetRegistry, "NotContributor"
             );
 
             await expect(
                 datasetRegistry.connect(third).contributeFor(third, "https://example.com/illicit-dataset")
             ).to.be.revertedWithCustomError(
-                datasetRegistry, "AccessControlUnauthorizedAccount"
+                datasetRegistry, "NotContributor"
             );
 
             await expect(
-                datasetRegistry.connect(contributor).contributeFor(contributor, "https://example.com/illicit-dataset")
+                datasetRegistry.connect(contributor).contributeFor(third, "https://example.com/illicit-dataset")
             ).to.be.revertedWithCustomError(
-                datasetRegistry, "AccessControlUnauthorizedAccount"
+                datasetRegistry, "CannotContributeForOthers"
             );
         });
     });
