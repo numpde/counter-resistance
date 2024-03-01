@@ -386,7 +386,81 @@ describe("DatasetRegistry", function () {
     });
 
     describe("Upgradeability", function () {
-        it("Should allow contract upgrades by an account with UPGRADER_ROLE");
-        it("Should prevent contract upgrades by unauthorized accounts");
+        it("Should allow contract upgrades by an account with UPGRADER_ROLE", async () => {
+            // Setup: Deploy the initial version of the contract
+            // Grant UPGRADER_ROLE to a specific account
+            // Prepare the new version of the contract
+            // Action: Attempt to upgrade the contract using the account with UPGRADER_ROLE
+            // Expectation: Upgrade is successful, contract version is updated
+            throw new Error("Test not implemented");
+        });
+
+        it("Should prevent contract upgrades by unauthorized accounts", async () => {
+            // Setup: Deploy the initial version of the contract
+            // Ensure an account does not have UPGRADER_ROLE
+            // Prepare the new version of the contract
+            // Action: Attempt to upgrade the contract using the unauthorized account
+            // Expectation: Upgrade fails, contract version remains unchanged
+            throw new Error("Test not implemented");
+        });
+    });
+
+    describe("NFT Transfer Authorization", function () {
+        describe("Transfer by Expert Contributors", function () {
+            it("Should allow an expert contributor to transfer their own NFT", async () => {
+                // Setup: Deploy contracts, mint NFT to expert contributor
+                // Action: Attempt to transfer NFT using `safeTransferFrom` by the expert contributor
+                // Expectation: Transfer is successful, ownership changes
+                throw new Error("Test not implemented");
+            });
+
+            it("Should not allow a regular contributor to transfer NFTs, even their own", async () => {
+                // Setup: Deploy contracts, mint NFT to regular contributor
+                // Action: Attempt to transfer NFT using `safeTransferFrom` by the regular contributor
+                // Expectation: Transfer fails, ownership remains unchanged
+                throw new Error("Test not implemented");
+            });
+        });
+
+        describe("Transfer Attempt by Non-owners", function () {
+            it("Should not allow non-owners to transfer NFTs, regardless of their role", async () => {
+                // Setup: Deploy contracts, mint NFT to an expert contributor, another account tries to transfer
+                // Action: Attempt to transfer NFT using `safeTransferFrom` by another account (non-owner)
+                // Expectation: Transfer fails
+                throw new Error("Test not implemented");
+            });
+        });
+
+        describe("Transfer Attempt with Delegated Authority", function () {
+            it("Should not allow expert contributors to delegate transfer authority", async () => {
+                // Setup: Deploy contracts, mint NFT to expert contributor, try to delegate transfer to another expert contributor
+                // Action: Attempt to transfer NFT using `safeTransferFrom` by the delegated expert contributor
+                // Expectation: Transfer fails
+                throw new Error("Test not implemented");
+            });
+
+            it("Should not allow regular contributors to delegate transfer authority", async () => {
+                // Setup: Deploy contracts, mint NFT to regular contributor, try to delegate transfer to another regular contributor
+                // Action: Attempt to transfer NFT using `safeTransferFrom` by the delegated regular contributor
+                // Expectation: Transfer fails
+                throw new Error("Test not implemented");
+            });
+        });
+
+        describe("Invalid Transfer Scenarios", function () {
+            it("Should fail transfer if the token ID does not exist", async () => {
+                // Setup: Deploy contracts without minting any NFT
+                // Action: Attempt to transfer NFT using `safeTransferFrom` with a non-existent token ID
+                // Expectation: Transfer fails due to non-existent token ID
+                throw new Error("Test not implemented");
+            });
+
+            it("Should fail transfer if the spender is not the owner nor the original contributor", async () => {
+                // Setup: Deploy contracts, mint NFT to one account, another unrelated account attempts transfer
+                // Action: Attempt to transfer NFT using `safeTransferFrom` by an unrelated account
+                // Expectation: Transfer fails due to lack of ownership or original contribution
+                throw new Error("Test not implemented");
+            });
+        });
     });
 });
