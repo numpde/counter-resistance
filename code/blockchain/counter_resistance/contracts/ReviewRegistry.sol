@@ -17,12 +17,7 @@ contract ReviewRegistry is RegistryBase {
 
     mapping(uint256 => ReviewTarget) private _reviewTargets;
 
-    event ReviewTargetSet(
-        uint256 indexed contributionId,
-        uint256 chainId,
-        address contractAddress,
-        uint256 targetId
-    );
+    event ReviewTargetSet(uint256 indexed contributionId);
 
     constructor() {
         _disableInitializers();
@@ -63,7 +58,7 @@ contract ReviewRegistry is RegistryBase {
      */
     function _setReviewTarget(uint256 contributionId, ReviewTarget memory target) private {
         _reviewTargets[contributionId] = target;
-        emit ReviewTargetSet(contributionId, target.chainId, target.contractAddress, target.targetId);
+        emit ReviewTargetSet(contributionId);
     }
 
     //
