@@ -37,7 +37,7 @@ contract ProfileRegistry is RegistryBase {
      * @return contributionId The ID of the newly created contribution.
      */
     function contribute(string memory uri) public override returns (uint256 contributionId) {
-        _selfGrantContributorRole();  // emits
+        _selfGrantContributorRole();  // emits if role is newly granted
         contributionId = super.contribute(uri);  // emits
     }
 }
