@@ -2,10 +2,10 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "./RegistryBase.sol";
+import "../ContributionRegistry.sol";
 
 /// @custom:security-contact hello@counter-resistance.org
-contract ProfileRegistry is RegistryBase {
+contract ProfileRegistry is ContributionRegistry {
     event ContributorRoleSelfGranted(address indexed contributor);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -14,7 +14,7 @@ contract ProfileRegistry is RegistryBase {
     }
 
     function initialize() override initializer public {
-        RegistryBase.initialize();
+        ContributionRegistry.initialize();
 
         // Reinitialize with specific name and symbol
         __ERC721_init("Whois registry", "WHOIS");

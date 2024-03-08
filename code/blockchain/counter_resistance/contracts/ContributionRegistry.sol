@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @custom:security-contact hello@counter-resistance.org
-contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, ERC721PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, ERC721PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     uint256 private _nextContributionId;
     mapping(uint256 => address) private _originalContributor;
 
@@ -125,6 +125,24 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
     //
 
     /**
+     * @dev Requires that the operator has permission to contribute.
+     * Throws custom errors if the operator cannot contribute.
+     * @param to The address for whom the contribution is being made.
+     */
+    function _requireCanContribute(address operator, address to) private view {
+        bool isExpert = hasRole(EXPERT_CONTRIBUTOR_ROLE, operator);
+        bool isContributor = hasRole(CONTRIBUTOR_ROLE, operator);
+
+        if (!isExpert && !isContributor) {
+            revert NotContributor(operator);
+        }
+
+        if (isContributor && (to != operator)) {
+            revert CannotContributeForOthers(operator, to);
+        }
+    }
+
+    /**
      * @dev Internal function to handle contributions. It checks if the caller has the appropriate role
      * to contribute on behalf of another address or for themselves, then "mints" a new contribution.
      * This function can be called by anyone with the EXPERT_CONTRIBUTOR_ROLE to contribute for another address,
@@ -135,19 +153,11 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
      */
     function _contribute(address to, string memory uri)
     internal
+    virtual
     whenNotPaused
     returns (uint256 contributionId)
     {
-        bool isExpert = hasRole(EXPERT_CONTRIBUTOR_ROLE, _msgSender());
-        bool isContributor = hasRole(CONTRIBUTOR_ROLE, _msgSender());
-
-        if (!isExpert && !isContributor) {
-            revert NotContributor(_msgSender());
-        }
-
-        if (isContributor && (to != _msgSender())) {
-            revert CannotContributeForOthers(_msgSender(), to);
-        }
+        _requireCanContribute(_msgSender(), to);
 
         contributionId = _nextContributionId++;
 
@@ -167,7 +177,11 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
      * @param uri The URI for the contribution metadata.
      * @return contributionId The ID of the new contribution.
      */
-    function contributeFor(address to, string memory uri) public virtual returns (uint256 contributionId) {
+    function contributeFor(address to, string memory uri)
+    public
+    virtual
+    returns (uint256 contributionId)
+    {
         contributionId = _contribute(to, uri);
     }
 
@@ -176,7 +190,11 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
      * @param uri The URI for the contribution metadata.
      * @return contributionId The ID of the new contribution.
      */
-    function contribute(string memory uri) public virtual returns (uint256 contributionId) {
+    function contribute(string memory uri)
+    public
+    virtual
+    returns (uint256 contributionId)
+    {
         contributionId = _contribute(_msgSender(), uri);
     }
 
@@ -255,9 +273,8 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
      * This function assumes that `owner` is the actual owner of `tokenId` and does not verify this
      * assumption. It returns true if `spender` is allowed to manage the token.
      *
-     * Only expert contributors are allowed to transfer NFTs, adhering to the logic that
-     * being the owner and the original contributor, and having the EXPERT_CONTRIBUTOR_ROLE,
-     * grants the right to transfer the ownership.
+     * Only expert contributors are allowed to transfer tokens, specifically, one has to
+     * be the owner and the original contributor, and have the EXPERT_CONTRIBUTOR_ROLE.
      * Regular contributors, even if they are original contributors, are not allowed to transfer.
      *
      * @param owner The owner of the token.
@@ -268,16 +285,14 @@ contract RegistryBase is Initializable, ERC721Upgradeable, ERC721EnumerableUpgra
     function _isAuthorized(address owner, address spender, uint256 tokenId) internal view virtual override returns (bool) {
         bool isOwner = (owner == spender);
         bool isOriginalContributor = (_originalContributor[tokenId] == spender);
+        bool hasExpertRole = hasRole(EXPERT_CONTRIBUTOR_ROLE, spender);
 
         // Directly authorize the transfer if all are true:
-        // 1. The spender is the owner of the token,
-        // 2. The spender is the original contributor of the token, and
-        // 3. The spender has the EXPERT_CONTRIBUTOR_ROLE.
-        if (isOwner && isOriginalContributor) {
-            return hasRole(EXPERT_CONTRIBUTOR_ROLE, spender);
+        if (isOwner && isOriginalContributor && hasExpertRole) {
+            return true;
         }
 
-        // Prevent any form of delegated transfer authority, to disallow
+        // Avoid any form of delegated transfer authority, to disallow
         // contributors from authorizing others to transfer their contributions.
         return false;
     }
