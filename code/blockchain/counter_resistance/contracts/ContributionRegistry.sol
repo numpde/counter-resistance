@@ -26,6 +26,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
 
     error NotContributor(address caller);
     error CannotContributeForOthers(address caller, address intendedContributor);
+    error NotAuthorizedToUpdateMetadata(address caller, uint256 contributionId);
 
     event Contribution(address indexed by, address indexed to, uint256 indexed contributionId, string uri);
 
@@ -121,7 +122,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     }
 
     //
-    // Data contribution (i.e., minting).
+    // Permissions.
     //
 
     /**
@@ -129,7 +130,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * Throws custom errors if the operator cannot contribute.
      * @param to The address for whom the contribution is being made.
      */
-    function _requireCanContribute(address operator, address to) private view {
+    function _requireCanContribute(address operator, address to) internal view virtual {
         bool isExpert = hasRole(EXPERT_CONTRIBUTOR_ROLE, operator);
         bool isContributor = hasRole(CONTRIBUTOR_ROLE, operator);
 
@@ -141,6 +142,68 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
             revert CannotContributeForOthers(operator, to);
         }
     }
+
+    /**
+     * @dev Requires that the operator has permission to set or update the URI of a specific contribution.
+     * This function checks if the operator is the current owner of the contribution and has a contributor role.
+     * The usage of `ownerOf` is implicit existence check for the contribution.
+     * Throws `NotAuthorizedToUpdateMetadata` if the operator is not authorized to update the metadata.
+     * @param operator The address attempting to set or update the contribution URI.
+     * @param contributionId The ID of the contribution whose URI is being set or updated.
+     */
+    function _requireCanSetURI(address operator, uint256 contributionId) internal view virtual {
+        // Attempt to get the owner of the contribution to implicitly check if it exists.
+        // This will revert if the contribution does not exist.
+        address owner = ownerOf(contributionId);
+
+        bool isOwner = (owner == operator);
+        bool isExpertContributor = hasRole(EXPERT_CONTRIBUTOR_ROLE, operator);
+        bool isRegularContributor = hasRole(CONTRIBUTOR_ROLE, operator);
+
+        // doesn't matter:
+        // bool isOriginalContributor = (_originalContributor[contributionId] == operator);
+
+        if ((isRegularContributor || isExpertContributor) && isOwner) {
+            return;
+        }
+
+        revert NotAuthorizedToUpdateMetadata(operator, contributionId);
+    }
+
+    /**
+     * @dev Override _isAuthorized to include a role check for expert contributors.
+     * This function assumes that `owner` is the actual owner of `tokenId` and does not verify this
+     * assumption. It returns true if `spender` is allowed to manage the token.
+     *
+     * Only expert contributors are allowed to transfer tokens, specifically, one has to
+     * be the owner and the original contributor, and have the EXPERT_CONTRIBUTOR_ROLE.
+     * Regular contributors, even if they are original contributors, are not allowed to transfer.
+     *
+     * @param owner The owner of the token.
+     * @param spender The address attempting to operate on the token.
+     * @param tokenId The ID of the token in question.
+     * @return A boolean indicating whether the spender is authorized to manage the token.
+     */
+    function _isAuthorized(address owner, address spender, uint256 tokenId) internal view virtual override returns (bool) {
+        bool isOwner = (owner == spender);
+        bool isExpertContributor = hasRole(EXPERT_CONTRIBUTOR_ROLE, spender);
+        bool isOriginalContributor = (_originalContributor[tokenId] == spender);
+
+        // Directly authorize the transfer if all are true:
+        if (isOwner && isOriginalContributor && isExpertContributor) {
+            return true;
+        }
+
+        super._isAuthorized;
+
+        // Avoid any form of delegated transfer authority, to disallow
+        // contributors from authorizing others to transfer their contributions.
+        return false;
+    }
+
+    //
+    // Data contribution (i.e., minting).
+    //
 
     /**
      * @dev Internal function to handle contributions.
@@ -199,30 +262,20 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * @param contributionId The ID of the contribution whose URI is being updated.
      * @param uri The new URI string to be associated with the contribution.
      */
-    function setContributionURI(uint256 contributionId, string memory uri) public whenNotPaused {
-        // Attempt to get the owner of the contribution to implicitly check if it exists.
-        // This will revert if the contribution does not exist.
-        address owner = ownerOf(contributionId);
-
-        require(
-            hasRole(EXPERT_CONTRIBUTOR_ROLE, _msgSender()) ||
-            (hasRole(CONTRIBUTOR_ROLE, _msgSender()) && owner == _msgSender()),
-            "Not authorized to setContributionURI"
-        );
-
+    function setContributionMetadata(uint256 contributionId, string memory uri) public whenNotPaused {
+        _requireCanSetURI(_msgSender(), contributionId);
         _setTokenURI(contributionId, uri);
 
         emit ContributionMetadataUpdated(_msgSender(), contributionId, uri);
     }
-
 
     /**
      * @dev Preferred method for fetching contribution URIs, acting as a wrapper to {tokenURI}.
      * @param contributionId uint256 ID of the contribution
      * @return string memory URI of the contribution
      */
-    function contributionURI(uint256 contributionId) public view returns (string memory) {
-        return tokenURI(contributionId);
+    function contributionMetadata(uint256 contributionId) public view returns (string memory) {
+        return super.tokenURI(contributionId);
     }
 
     //
@@ -234,39 +287,6 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     onlyRole(CONTRACT_UPGRADER_ROLE)
     override
     {}
-
-    //
-    // Customization overrides.
-    //
-
-    /**
-     * @dev Override _isAuthorized to include a role check for expert contributors.
-     * This function assumes that `owner` is the actual owner of `tokenId` and does not verify this
-     * assumption. It returns true if `spender` is allowed to manage the token.
-     *
-     * Only expert contributors are allowed to transfer tokens, specifically, one has to
-     * be the owner and the original contributor, and have the EXPERT_CONTRIBUTOR_ROLE.
-     * Regular contributors, even if they are original contributors, are not allowed to transfer.
-     *
-     * @param owner The owner of the token.
-     * @param spender The address attempting to operate on the token.
-     * @param tokenId The ID of the token in question.
-     * @return A boolean indicating whether the spender is authorized to manage the token.
-     */
-    function _isAuthorized(address owner, address spender, uint256 tokenId) internal view virtual override returns (bool) {
-        bool isOwner = (owner == spender);
-        bool isOriginalContributor = (_originalContributor[tokenId] == spender);
-        bool hasExpertRole = hasRole(EXPERT_CONTRIBUTOR_ROLE, spender);
-
-        // Directly authorize the transfer if all are true:
-        if (isOwner && isOriginalContributor && hasExpertRole) {
-            return true;
-        }
-
-        // Avoid any form of delegated transfer authority, to disallow
-        // contributors from authorizing others to transfer their contributions.
-        return false;
-    }
 
     //
     // Overrides required by Solidity.
@@ -308,6 +328,6 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
     returns (string memory)
     {
-        return super.tokenURI(tokenId);
+        return this.contributionMetadata(tokenId);
     }
 }
