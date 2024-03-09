@@ -37,7 +37,7 @@ contract ContributionRegistryWithRef is ContributionRegistry {
         _disableInitializers();
     }
 
-    function initialize() public override initializer {
+    function initialize() public virtual override initializer {
         ContributionRegistry.initialize();
     }
 
@@ -58,13 +58,9 @@ contract ContributionRegistryWithRef is ContributionRegistry {
     }
 
     /**
-     * @notice Disables contributing for another without a specified target reference.
-     * @dev Overrides `contributeFor` and reverts with `TargetRefRequired`.
-     * @param to The address for whom the contribution is being made.
-     * @param uri The URI for the contribution metadata.
-     * @return contributionId The function reverts with `TargetRefRequired`.
+     * @dev Disables `contributeFor` without a targetRef and reverts with `TargetRefRequired`.
      */
-    function contributeFor(address to, string memory uri) public override returns (uint256) {
+    function contributeFor(address /*to*/, string memory /*uri*/) public pure override returns (uint256) {
         revert TargetRefRequired();
     }
 
@@ -86,12 +82,9 @@ contract ContributionRegistryWithRef is ContributionRegistry {
     }
 
     /**
-     * @notice Disables contributing without a specified target reference.
-     * @dev Overrides `contribute` and reverts with `TargetRefRequired`.
-     * @param uri The URI for the contribution metadata.
-     * @return contributionId The function reverts with `TargetRefRequired`.
+     * @dev Disables `contribute` without a targetRef and reverts with `TargetRefRequired`.
      */
-    function contribute(string memory uri) public override returns (uint256) {
+    function contribute(string memory /*uri*/) public pure override returns (uint256) {
         revert TargetRefRequired();
     }
 

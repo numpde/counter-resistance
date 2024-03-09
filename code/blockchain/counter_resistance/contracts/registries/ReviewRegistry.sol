@@ -28,9 +28,10 @@ contract ReviewRegistry is ContributionRegistryWithRef {
      * @return bool True if the `spender` is authorized to manage the contribution, false otherwise.
      */
     function _isAuthorized(address owner, address spender, uint256 contributionId) internal view override returns (bool) {
+        bool isOwner = (owner == spender);
         bool isOriginalContributor = (getOriginalContributor(contributionId) == spender);
         bool isExpertContributor = hasRole(EXPERT_CONTRIBUTOR_ROLE, spender);
 
-        return isOriginalContributor && isExpertContributor;
+        return (isOwner || !isOwner) && isOriginalContributor && isExpertContributor;
     }
 }
