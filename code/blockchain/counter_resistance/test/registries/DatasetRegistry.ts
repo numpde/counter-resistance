@@ -1,5 +1,4 @@
-import {getSigners} from "./ethers_signers";
-import {HardhatEthersSigner, SignerWithAddress} from "@nomicfoundation/hardhat-ethers/signers";
+import {getSigners} from "../utils/ethers_signers";
 
 const {expect} = require("chai");
 const {ethers, upgrades} = require("hardhat");
@@ -71,7 +70,7 @@ describe("DatasetRegistry", function () {
             const uri = "https://example.com/dataset";
             const expectedTokenId = 1;
 
-            const tx = await datasetRegistry.connect(expertContributor).contributeFor(third.address, uri);
+            const tx = await datasetRegistry.connect(expertContributor).submitFor(third.address, uri);
             const receipt = await tx.wait();
 
             const transferLog = receipt.logs.find((log: EventLog) => (log.fragment.name === 'Contribution'));
@@ -92,7 +91,7 @@ describe("DatasetRegistry", function () {
             const uri = "https://example.com/dataset";
             const expectedTokenId = 1;
 
-            const tx = await datasetRegistry.connect(contributor).contribute(uri);
+            const tx = await datasetRegistry.connect(contributor).submit(uri);
             const receipt = await tx.wait();
 
             const transferLog = receipt.logs.find((log: EventLog) => log.fragment.name === 'Transfer');
@@ -116,7 +115,7 @@ describe("DatasetRegistry", function () {
 
             const uri = "https://example.com/dataset";
 
-            const attemptSubmit = datasetRegistry.connect(expertContributor).contribute(uri);
+            const attemptSubmit = datasetRegistry.connect(expertContributor).submit(uri);
             await expect(attemptSubmit).to.not.be.reverted;
         });
 
@@ -125,12 +124,12 @@ describe("DatasetRegistry", function () {
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             const uri = "https://example.com/dataset";
-            await datasetRegistry.connect(contributor).contribute(uri);
+            await datasetRegistry.connect(contributor).submit(uri);
 
             const expectedTokenId = 1;
 
             expect(await datasetRegistry.ownerOf(expectedTokenId)).to.equal(contributor.address);
-            expect(await datasetRegistry.contributionURI(expectedTokenId)).to.equal(uri);
+            expect(await datasetRegistry.metadata(expectedTokenId)).to.equal(uri);
         });
 
         it("Should assign ownership and URI correctly by an expert contributor", async () => {
@@ -138,12 +137,12 @@ describe("DatasetRegistry", function () {
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             const uri = "https://example.com/dataset";
-            await datasetRegistry.connect(expertContributor).contributeFor(third, uri);
+            await datasetRegistry.connect(expertContributor).submitFor(third, uri);
 
             const expectedTokenId = 1;
 
             expect(await datasetRegistry.ownerOf(expectedTokenId)).to.equal(third.address);
-            expect(await datasetRegistry.contributionURI(expectedTokenId)).to.equal(uri);
+            expect(await datasetRegistry.metadata(expectedTokenId)).to.equal(uri);
         });
 
         it("Should reject unauthorized dataset submission", async () => {
@@ -151,19 +150,19 @@ describe("DatasetRegistry", function () {
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             await expect(
-                datasetRegistry.connect(third).contribute("https://example.com/illicit-dataset")
+                datasetRegistry.connect(third).submit("https://example.com/illicit-dataset")
             ).to.be.revertedWithCustomError(
                 datasetRegistry, "NotContributor"
             );
 
             await expect(
-                datasetRegistry.connect(third).contributeFor(third, "https://example.com/illicit-dataset")
+                datasetRegistry.connect(third).submitFor(third, "https://example.com/illicit-dataset")
             ).to.be.revertedWithCustomError(
                 datasetRegistry, "NotContributor"
             );
 
             await expect(
-                datasetRegistry.connect(contributor).contributeFor(third, "https://example.com/illicit-dataset")
+                datasetRegistry.connect(contributor).submitFor(third, "https://example.com/illicit-dataset")
             ).to.be.revertedWithCustomError(
                 datasetRegistry, "CannotContributeForOthers"
             );
@@ -176,41 +175,44 @@ describe("DatasetRegistry", function () {
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             const uri = "https://example.com/dataset";
-            await datasetRegistry.connect(contributor).contribute(uri);
+            await datasetRegistry.connect(contributor).submit(uri);
 
             const datasetId = 1;
-            expect(await datasetRegistry.contributionURI(datasetId)).to.equal(uri);
+            expect(await datasetRegistry.metadata(datasetId)).to.equal(uri);
 
             const newUri = "https://example.com/new-dataset-uri";
 
-            await expect(datasetRegistry.connect(contributor).setContributionURI(datasetId, newUri))
+            await expect(datasetRegistry.connect(contributor).setMetadata(datasetId, newUri))
                 .to.emit(datasetRegistry, 'MetadataUpdate')
                 .withArgs(datasetId);
 
-            expect(await datasetRegistry.contributionURI(datasetId)).to.equal(newUri);
+            expect(await datasetRegistry.metadata(datasetId)).to.equal(newUri);
         });
 
-        it("Should allow an expert contributor to set the URI for any dataset", async () => {
+        it("Should not allow an expert contributor to set the URI for any dataset", async () => {
             const {contributor, expertContributor} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             // Submitting a dataset as a regular contributor
             const uri = "https://example.com/dataset";
-            await datasetRegistry.connect(contributor).contribute(uri);
+            await datasetRegistry.connect(contributor).submit(uri);
 
             const datasetId = 1; // The ID of the dataset submitted by the contributor
-            expect(await datasetRegistry.contributionURI(datasetId)).to.equal(uri);
+            expect(await datasetRegistry.metadata(datasetId)).to.equal(uri);
 
-            // An expert contributor updates the URI for the dataset submitted by the contributor
+            // An expert contributor attempts to update the URI for the dataset submitted by the contributor
             const newUri = "https://example.com/updated-dataset-uri";
 
-            // Expect the expert contributor to successfully update the dataset URI
-            await expect(datasetRegistry.connect(expertContributor).setContributionURI(datasetId, newUri))
-                .to.emit(datasetRegistry, 'MetadataUpdate')
-                .withArgs(datasetId);
+            await expect(datasetRegistry.connect(expertContributor).setMetadata(datasetId, newUri))
+                .to.revertedWithCustomError(
+                    datasetRegistry,
+                    "NotAuthorizedToUpdateMetadata"
+                )
+            // .to.emit(datasetRegistry, 'MetadataUpdate')
+            // .withArgs(datasetId);
 
-            // Verify the URI was updated successfully
-            expect(await datasetRegistry.contributionURI(datasetId)).to.equal(newUri);
+            // Verify the URI was not updated
+            expect(await datasetRegistry.metadata(datasetId)).to.equal(uri);
         });
 
         it("Should not allow a contributor to set the URI for another contributor's dataset", async () => {
@@ -219,20 +221,23 @@ describe("DatasetRegistry", function () {
 
             // An expert contributor submits a dataset on behalf of a third party
             const uri = "https://example.com/dataset-for-third";
-            await datasetRegistry.connect(expertContributor).contributeFor(third.address, uri);
+            await datasetRegistry.connect(expertContributor).submitFor(third.address, uri);
 
             const datasetId = 1; // Assuming this is the dataset ID assigned
-            expect(await datasetRegistry.contributionURI(datasetId)).to.equal(uri);
+            expect(await datasetRegistry.metadata(datasetId)).to.equal(uri);
 
             // A different contributor attempts to update the URI for the dataset owned by 'third'
             const newUri = "https://example.com/unauthorized-update-uri";
 
             // Expect the attempt to fail due to insufficient permissions
-            await expect(datasetRegistry.connect(contributor).setContributionURI(datasetId, newUri))
-                .to.be.revertedWith("Not authorized to setContributionURI");
+            await expect(datasetRegistry.connect(contributor).setMetadata(datasetId, newUri))
+                .to.revertedWithCustomError(
+                    datasetRegistry,
+                    "NotAuthorizedToUpdateMetadata"
+                )
 
             // Verify the URI was not updated
-            expect(await datasetRegistry.contributionURI(datasetId)).to.equal(uri);
+            expect(await datasetRegistry.metadata(datasetId)).to.equal(uri);
         });
     });
 
@@ -307,52 +312,49 @@ describe("DatasetRegistry", function () {
             const {pauser, contributor, expertContributor} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
-            await datasetRegistry.connect(expertContributor).contributeFor(expertContributor.address, "https://example.com/dataset-1")
+            await datasetRegistry.connect(expertContributor).submit("https://example.com/dataset-1")
 
             // Pause the contract
             await datasetRegistry.connect(pauser).pause();
             expect(await datasetRegistry.paused()).to.equal(true);
 
-            // Cannot submit a new dataset
-            await expect(
-                datasetRegistry.connect(expertContributor).contributeFor(expertContributor.address, "https://example.com/dataset-2")
-            ).to.be.revertedWithCustomError(
-                datasetRegistry, "EnforcedPause"
-            );
+            const actions = [
+                datasetRegistry.connect(expertContributor).submit("https://example.com/dataset-2"),
+                datasetRegistry.connect(expertContributor).setMetadata(1, "new-uri"),
+            ];
 
-            // Cannot change dataset URI
-            await expect(
-                datasetRegistry.connect(expertContributor).setContributionURI(1, "new-uri")
-            ).to.be.revertedWithCustomError(
-                datasetRegistry, "EnforcedPause"
-            );
+            for (const action of actions) {
+                await expect(action).revertedWithCustomError(datasetRegistry, "EnforcedPause");
+            }
         });
 
         it("Should unpause and allow dataset minting", async function () {
             const {pauser, contributor} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
-            // Pause
             await datasetRegistry.connect(pauser).pause();
             expect(await datasetRegistry.paused()).to.be.true;
 
-            // Unpause
             await datasetRegistry.connect(pauser).unpause();
             expect(await datasetRegistry.paused()).to.be.false;
 
-            await expect(datasetRegistry.connect(contributor).contribute("https://example.com/dataset"))
-                .not.to.be.reverted;
+            const action = datasetRegistry.connect(contributor).submit("https://example.com/dataset");
+            await expect(action).not.to.be.reverted;
         });
 
         it("Should restrict pausing functionality to accounts with PAUSER_ROLE", async function () {
             const {expertContributor, third} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
-            await expect(datasetRegistry.connect(third).pause())
-                .to.be.revertedWithCustomError(datasetRegistry, "AccessControlUnauthorizedAccount");
 
-            await expect(datasetRegistry.connect(expertContributor).pause())
-                .to.be.revertedWithCustomError(datasetRegistry, "AccessControlUnauthorizedAccount");
+            const actions = [
+                datasetRegistry.connect(third).pause(),
+                datasetRegistry.connect(expertContributor).pause(),
+            ];
+
+            for (const action of actions) {
+                await expect(action).revertedWithCustomError(datasetRegistry, "AccessControlUnauthorizedAccount");
+            }
         });
     });
 
@@ -365,7 +367,7 @@ describe("DatasetRegistry", function () {
 
             // Submit some datasets
             for (let i = 0; i < expectedTokenIds.length; i++) {
-                await datasetRegistry.connect(contributor).contribute(`testURI#${i}`);
+                await datasetRegistry.connect(contributor).submit(`testURI#${i}`);
             }
 
             // Total supply
