@@ -19,13 +19,12 @@ This document briefly outlines the smart contract specifications for the Antimic
 | **ReviewRegistry**               | Submit a review                                             | Change review ownership                       | Update review details                       | Delete review                    | ?                                          | ?                    | Pause review interactions           | ?        | ?      |
 | **BountyClaim**                  | Create a claim for a bounty                                 | Transfer bounty claim ownership               | Update bounty claim details                 | Withdraw bounty claim             | ?                                          | ?                    | Pause bounty claim interactions      | ?        | ?      |
 
-
-### Table 3: Reputation Management
+### Table 3: Reputation management
 | Contract            | Mint                                                         | Transfer  | Update Metadata  | Burn                | Approval  | Set Approval For All  | Freeze/Unfreeze          | Delegate  | Revoke  |
 |---------------------|--------------------------------------------------------------|-----------|------------------|---------------------|-----------|----------------------|--------------------------|-----------|---------|
 | **Reputation Contract** | Automatically minted for activities (contributions, reviews) | ?         | ?                | Diminish reputation | ?         | ?                    | Pause reputation updates | ?         | ?       |
 
-### Table 4: Funding and Specialized Channels
+### Table 4: Funding and specialized channels
 | Contract                                 | Mint  | Transfer          | Update Metadata | Burn | Approval | Set Approval For All | Freeze/Unfreeze                 | Delegate | Revoke |
 |------------------------------------------|-------|-------------------|-----------------|------|----------|---------------------|---------------------------------|----------|--------|
 | **FundingBase**                          | ?     | Re-allocate funds | ?               | ?    | ?        | ?                   | Pause financial transactions   | ?        | ?      |
