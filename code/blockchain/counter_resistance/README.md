@@ -92,3 +92,61 @@ the contribution's URI can be set using
 `setContributionURI`
 if the caller is the current owner and has either contributor role
 (see `_requireCanSetURI`).
+
+#### DatasetRegistry
+
+Wraps `_contribute` in `submit` and `submitFor`.
+Does not change the permission logic.
+
+#### ProfileRegistry
+
+Wraps `_contribute` in `addProfile` (only to self).
+Auto-grants the `CONTRIBUTOR_ROLE`.
+Does not change the permission logic.
+Note that multiple profiles can be associated with one address.
+
+### ContributionRegistryWithRef
+
+Derives from ContributionRegistry.
+Requires a contribution to be associated with another
+"token" (e.g., another contribution).
+Does not provide any management functions beyond that,
+i.e.,
+the reference is fixed for the lifetime
+of the contribution.
+In particular, permission logic is as in the base contract.
+However, a `_requireCanChangeTarget` might be introduced later.
+
+#### ReviewRegistry
+
+Modifies the `_isAuthorized` function wherein only 
+a contributor is authorized
+(to transfer or potentially delete a review)
+only if they are an expert contributor 
+and the original contributor of the particular review.
+
+#### BountyClaim
+
+Modifies the `_isAuthorized` function wherein
+only the current owner is authorized
+(to transfer or delete the bounty claim).
+
+### Reputation contract
+
+Not implemented.
+
+### FundingBase
+
+For withdrawing in native currency or in other tokens,
+as well as for internal transfers,
+relies on
+`_requireCanHandle`.
+This 
+requires sufficient balance
+and 
+for the operator to be the owner
+(or have the `FUNDS_SUPERADMIN_ROLE`).
+
+#### Specialized funding channel
+
+Not implemented.
