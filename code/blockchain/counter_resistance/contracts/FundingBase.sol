@@ -16,7 +16,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract FundingBase is Initializable, PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-    bytes32 public constant FUNDS_ADMIN_ROLE = keccak256("FUNDS_ADMIN_ROLE");
+    bytes32 public constant FUNDS_SUPERADMIN_ROLE = keccak256("FUNDS_SUPERADMIN_ROLE");
 
     /* @dev Maps a token address to a funder's address to their balance of that token. */
     mapping(address => mapping(address => uint256)) private _tokenFunderBalances;
@@ -42,8 +42,8 @@ contract FundingBase is Initializable, PausableUpgradeable, AccessControlUpgrade
         _grantRole(PAUSER_ROLE, pauser);
         _grantRole(UPGRADER_ROLE, upgrader);
 
-        /* Automatically granting the default admin FUNDS_ADMIN_ROLE. */
-        _grantRole(FUNDS_ADMIN_ROLE, defaultAdmin);
+        /* Automatically granting the default admin FUNDS_SUPERADMIN_ROLE. */
+        _grantRole(FUNDS_SUPERADMIN_ROLE, defaultAdmin);
     }
 
     /**
@@ -118,7 +118,7 @@ contract FundingBase is Initializable, PausableUpgradeable, AccessControlUpgrade
         if (!hasSufficientBalance) revert InsufficientBalance();
 
         bool isOperatorTheOwner = (from == operator);
-        bool isFundsAdmin = hasRole(FUNDS_ADMIN_ROLE, operator);
+        bool isFundsAdmin = hasRole(FUNDS_SUPERADMIN_ROLE, operator);
 
         if (!(isOperatorTheOwner || isFundsAdmin)) {
             revert Unauthorized();
