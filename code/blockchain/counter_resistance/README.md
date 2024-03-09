@@ -89,7 +89,7 @@ regardless of approvals
 (see `_isAuthorized`);
 deleting a contribution is not implemented;
 the contribution's URI can be set using
-`setContributionURI`
+`setMetadata`
 if the caller is the current owner and has either contributor role
 (see `_requireCanSetURI`).
 
