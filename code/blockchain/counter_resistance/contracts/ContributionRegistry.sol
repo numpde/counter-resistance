@@ -24,6 +24,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     bytes32 public constant EXPERT_CONTRIBUTOR_ROLE = keccak256("EXPERT_CONTRIBUTOR_ROLE");
     bytes32 public constant EXPERT_CONTRIBUTOR_ROLE_MANAGER = keccak256("EXPERT_CONTRIBUTOR_ROLE_MANAGER");
 
+    error Disabled();
     error NotContributor(address caller);
     error CannotContributeForOthers(address caller, address intendedContributor);
     error NotAuthorizedToUpdateMetadata(address caller, uint256 contributionId);
@@ -222,8 +223,8 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
 
         contributionId = _nextContributionId++;
 
-        _safeMint(to, contributionId);
-        _setTokenURI(contributionId, uri);
+        super._safeMint(to, contributionId);
+        super._setTokenURI(contributionId, uri);
 
         _originalContributor[contributionId] = _msgSender();
 
@@ -259,23 +260,23 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * - The contract must not be paused.
      * - The caller must be an expert contributor or the owner of the contribution (for regular contributors).
      *
-     * @param contributionId The ID of the contribution whose URI is being updated.
+     * @param id The ID of the contribution whose URI is being updated.
      * @param uri The new URI string to be associated with the contribution.
      */
-    function setContributionMetadata(uint256 contributionId, string memory uri) public whenNotPaused {
-        _requireCanSetURI(_msgSender(), contributionId);
-        _setTokenURI(contributionId, uri);
+    function setMetadata(uint256 id, string memory uri) public whenNotPaused {
+        _requireCanSetURI(_msgSender(), id);
+        super._setTokenURI(id, uri);
 
-        emit ContributionMetadataUpdated(_msgSender(), contributionId, uri);
+        emit ContributionMetadataUpdated(_msgSender(), id, uri);
     }
 
     /**
      * @dev Preferred method for fetching contribution URIs, acting as a wrapper to {tokenURI}.
-     * @param contributionId uint256 ID of the contribution
+     * @param id uint256 ID of the contribution
      * @return string memory URI of the contribution
      */
-    function contributionMetadata(uint256 contributionId) public view returns (string memory) {
-        return super.tokenURI(contributionId);
+    function metadata(uint256 id) public view returns (string memory) {
+        return super.tokenURI(id);
     }
 
     //
@@ -287,6 +288,15 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     onlyRole(CONTRACT_UPGRADER_ROLE)
     override
     {}
+
+    //
+    // Overrides.
+    //
+
+    // Discourage the use of this function in derived contracts
+    function _setTokenURI(uint256 /*tokenId*/, string memory /*uri*/) internal override pure {
+        revert Disabled();
+    }
 
     //
     // Overrides required by Solidity.
@@ -323,11 +333,11 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * @return string memory URI of the token
      */
     function tokenURI(uint256 tokenId)
-    public
+    public  // for marketplaces like OpenSea
     view
     override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
     returns (string memory)
     {
-        return this.contributionMetadata(tokenId);
+        return  metadata(tokenId);
     }
 }
