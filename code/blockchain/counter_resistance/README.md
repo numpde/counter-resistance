@@ -1,7 +1,10 @@
 # AMR Data Collection Ecosystem: Smart Contract Specification (Draft)
 
+
 ## Overview
-This document briefly outlines the smart contract specifications for the Antimicrobial Resistance (AMR) Data Collection Ecosystem. The ecosystem leverages blockchain technology to incentivize the submission, validation, and funding of AMR-related datasets, ensuring transparency, security, and efficiency throughout the process.
+
+This document outlines the smart contract specifications for the Antimicrobial Resistance (AMR) Data Collection Ecosystem. 
+The ecosystem attempts to incentivize the submission, validation, and funding of AMR-related datasets.
 
 ### Table 1: Contributions
 
@@ -31,7 +34,7 @@ This document briefly outlines the smart contract specifications for the Antimic
 | **Specialized Funding Channel Contracts**| ?     | ?                 | ?               | ?    | ?        | ?                   | Pause channel-specific actions | ?        | ?      |
 
 
-## Core Contracts
+## Some core contracts
 
 ### DatasetRegistry Contract
 - **Objective:** Manages AMR dataset registrations as ERC-721 non-fungible tokens (NFTs), including tracking and versioning.
@@ -39,9 +42,7 @@ This document briefly outlines the smart contract specifications for the Antimic
   - Minting NFTs for each dataset submission.
   - Implementing version control via metadata.
   - Ensuring ERC-721 compliance.
-
-## Funding Infrastructure
-
+  
 ### FundingBase
 - **Objective:** Offers foundational fund management functionalities.
 - **Key Features:**
@@ -54,8 +55,6 @@ This document briefly outlines the smart contract specifications for the Antimic
 - **Key Features:**
   - Provides incentives for dataset submission and validation.
   - Supports R&D, education, emergency responses, and development.
-
-## Reputation System
 
 ### Reputation Contract
 - **Objective:** Manages reputation tokens to reflect ecosystem contributions.
