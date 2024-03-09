@@ -143,10 +143,8 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     }
 
     /**
-     * @dev Internal function to handle contributions. It checks if the caller has the appropriate role
-     * to contribute on behalf of another address or for themselves, then "mints" a new contribution.
-     * This function can be called by anyone with the EXPERT_CONTRIBUTOR_ROLE to contribute for another address,
-     * or by those with the CONTRIBUTOR_ROLE to contribute for themselves.
+     * @dev Internal function to handle contributions.
+     * It calls `_requireCanContribute`, then "mints" a new contribution.
      * @param to The address for whom the contribution is being made.
      * @param uri The URI for the contribution metadata.
      * @return contributionId The ID of the newly minted contribution.
@@ -169,33 +167,6 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
         emit Contribution(_msgSender(), to, contributionId, uri);
 
         return contributionId;
-    }
-
-    /**
-     * @dev Allows a user with the EXPERT_CONTRIBUTOR_ROLE to make a contribution on behalf of another address.
-     * @param to The address for whom the contribution is being made.
-     * @param uri The URI for the contribution metadata.
-     * @return contributionId The ID of the new contribution.
-     */
-    function contributeFor(address to, string memory uri)
-    public
-    virtual
-    returns (uint256 contributionId)
-    {
-        contributionId = _contribute(to, uri);
-    }
-
-    /**
-     * @dev Allows any user with the CONTRIBUTOR_ROLE to make a contribution for themselves.
-     * @param uri The URI for the contribution metadata.
-     * @return contributionId The ID of the new contribution.
-     */
-    function contribute(string memory uri)
-    public
-    virtual
-    returns (uint256 contributionId)
-    {
-        contributionId = _contribute(_msgSender(), uri);
     }
 
     /**

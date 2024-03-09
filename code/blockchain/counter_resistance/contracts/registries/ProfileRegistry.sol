@@ -31,13 +31,13 @@ contract ProfileRegistry is ContributionRegistry {
     }
 
     /**
-     * @dev Overrides the contribute function to automatically grant CONTRIBUTOR_ROLE
-     * to the caller before proceeding with the contribution. Contributions are to self.
+     * @dev Automatically grants the CONTRIBUTOR_ROLE to the caller
+     * before proceeding with the contribution. Contributions are to self.
      * @param uri The URI for the contribution metadata.
      * @return contributionId The ID of the newly created contribution.
      */
-    function contribute(string memory uri) public override returns (uint256 contributionId) {
+    function addProfile(string memory uri) public returns (uint256 profileId) {
         _selfGrantContributorRole();  // emits if role is newly granted
-        contributionId = super.contribute(uri);  // emits
+        profileId = super._contribute(_msgSender(), uri);  // emits
     }
 }

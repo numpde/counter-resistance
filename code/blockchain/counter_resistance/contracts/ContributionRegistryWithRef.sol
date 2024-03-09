@@ -43,48 +43,25 @@ contract ContributionRegistryWithRef is ContributionRegistry {
 
     /**
      * @notice Contributes on behalf of another address with a specified target reference.
-     * @dev Posts a contribution linked to a target reference on behalf of another user.
+     * @dev Posts a contribution linked to a target reference on behalf of a user.
      * @param to The address for whom the contribution is being made.
      * @param uri The URI for the contribution metadata.
      * @param targetRef The details of the target reference.
      * @return contributionId The unique identifier of the newly minted contribution.
      */
-    function contributeFor(address to, string memory uri, TargetRef memory targetRef)
-    public
+    function _contribute(address to, string memory uri, TargetRef memory targetRef)
+    internal
+    whenNotPaused
     returns (uint256 contributionId)
     {
-        contributionId = super.contributeFor(to, uri);
+        contributionId = super._contribute(to, uri);
         _setTargetRef(contributionId, targetRef);
     }
 
     /**
-     * @dev Disables `contributeFor` without a targetRef and reverts with `TargetRefRequired`.
+     * @dev Disables `_contribute` without a targetRef and reverts with `TargetRefRequired`.
      */
-    function contributeFor(address /*to*/, string memory /*uri*/) public pure override returns (uint256) {
-        revert TargetRefRequired();
-    }
-
-    /**
-     * @notice Allows a contributor to post a contribution with a target reference.
-     * @dev Posts a contribution linked to a specified target reference. This override ensures that all contributions
-     * must include a target reference. The single-parameter version of this function is disabled and will revert
-     * if called, enforcing the inclusion of a target reference for all contributions.
-     * @param uri The URI for the contribution metadata.
-     * @param targetRef The details of the target reference.
-     * @return contributionId The unique identifier of the newly minted contribution.
-     */
-    function contribute(string memory uri, TargetRef memory targetRef)
-    public
-    returns (uint256 contributionId)
-    {
-        contributionId = super.contribute(uri);
-        _setTargetRef(contributionId, targetRef);
-    }
-
-    /**
-     * @dev Disables `contribute` without a targetRef and reverts with `TargetRefRequired`.
-     */
-    function contribute(string memory /*uri*/) public pure override returns (uint256) {
+    function _contribute(address /*to*/, string memory /*uri*/) internal pure override returns (uint256) {
         revert TargetRefRequired();
     }
 

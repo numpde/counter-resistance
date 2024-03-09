@@ -11,6 +11,27 @@ contract DatasetRegistry is ContributionRegistry {
         _disableInitializers();
     }
 
+    /**
+     * @dev Allows authorized users to submit a dataset.
+     * @param to The address for whom the contribution is being made.
+     * @param uri The URI for the dataset metadata.
+     * @return datasetId The ID of the contribution.
+     */
+    function submitFor(address to, string memory uri) public returns (uint256 datasetId)
+    {
+        datasetId = _contribute(to, uri);
+    }
+
+    /**
+     * @dev Shortcut for `submitFor` to submit a dataset for the caller.
+     * @param uri The URI for the dataset metadata.
+     * @return datasetId The ID of the contribution.
+     */
+    function submit(string memory uri) public returns (uint256 datasetId)
+    {
+        datasetId = submitFor(_msgSender(), uri);
+    }
+
     function initialize() override initializer public {
         ContributionRegistry.initialize();
 
