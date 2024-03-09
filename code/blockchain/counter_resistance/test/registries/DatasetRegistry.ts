@@ -6,7 +6,8 @@ const {ethers, upgrades} = require("hardhat");
 import "@nomicfoundation/hardhat-chai-matchers";
 import {EventLog, ZeroAddress} from "ethers";
 import {LogDescription} from "ethers/src.ts/abi/interface";
-import {NotImplementedError} from "@nomicfoundation/hardhat-ethers/internal/errors"; //Added for revertWithCustomErrors
+import {NotImplementedError} from "@nomicfoundation/hardhat-ethers/internal/errors";
+import {experimentalAddHardhatNetworkMessageTraceHook} from "hardhat/config"; //Added for revertWithCustomErrors
 
 async function deployDatasetRegistryFixture() {
     const {deployer, contributor, expertContributor, pauser} = await getSigners();
@@ -387,6 +388,49 @@ describe("DatasetRegistry", function () {
         });
     });
 
+    describe("Tracking of the original contributor", function () {
+        it("Should record the submitter as the original contributor when a dataset is submitted directly", async () => {
+            const {contributor} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+            const uri = "https://example.com/direct-submission";
+
+            await datasetRegistry.connect(contributor).submit(uri);
+            const datasetId = 1; // Assuming this is the dataset ID assigned
+
+            const originalContributor = await datasetRegistry.getOriginalContributor(datasetId);
+            expect(originalContributor).to.equal(contributor.address);
+        });
+
+        it("Should record the specified contributor as the original contributor when submitted on behalf", async () => {
+            const {expertContributor, third} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            const uri = "https://example.com/submission-on-behalf";
+
+            await datasetRegistry.connect(expertContributor).submitFor(third.address, uri);
+            const datasetId = 1; // Assuming this is the dataset ID assigned
+
+            const originalContributor = await datasetRegistry.getOriginalContributor(datasetId);
+            expect(originalContributor).to.equal(expertContributor.address);
+        });
+
+        it("Should keep the original contributor unchanged after ownership transfer", async () => {
+            const {expertContributor, third} = await getSigners();
+            const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+            const uri = "https://example.com/ownership-transfer";
+            await datasetRegistry.connect(expertContributor).submit(uri);
+
+            const datasetId = 1; // Assuming this is the dataset ID assigned
+
+            // Assuming the expertContributor can transfer ownership of own NFT
+            await datasetRegistry.connect(expertContributor).safeTransferFrom(expertContributor.address, third.address, datasetId);
+
+            const originalContributor = await datasetRegistry.getOriginalContributor(datasetId);
+            expect(originalContributor).to.equal(expertContributor.address);
+        });
+    });
+
     describe("Upgradeability", function () {
         it("Should allow contract upgrades by an account with UPGRADER_ROLE", async () => {
             // Setup: Deploy the initial version of the contract
@@ -410,26 +454,94 @@ describe("DatasetRegistry", function () {
     describe("NFT Transfer Authorization", function () {
         describe("Transfer by Expert Contributors", function () {
             it("Should allow an expert contributor to transfer their own NFT", async () => {
-                // Setup: Deploy contracts, mint NFT to expert contributor
-                // Action: Attempt to transfer NFT using `safeTransferFrom` by the expert contributor
-                // Expectation: Transfer is successful, ownership changes
-                throw new Error("Test not implemented");
+                const {expertContributor, third} = await getSigners();
+                const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+                // An expert contributor submits a dataset and receives an NFT
+                const uri = "https://example.com/expert-dataset";
+                await datasetRegistry.connect(expertContributor).submit(uri);
+
+                const datasetId = 1; // Assuming this is the first dataset and hence the NFT ID is 1
+
+                // Verify the initial owner of the NFT is the expert contributor
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(expertContributor.address);
+
+                // Attempt to transfer NFT from expert contributor to recipient
+                await datasetRegistry.connect(expertContributor).safeTransferFrom(expertContributor.address, third.address, datasetId);
+
+                // Verify the new owner of the NFT is the recipient
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(third.address);
             });
 
             it("Should not allow a regular contributor to transfer NFTs, even their own", async () => {
-                // Setup: Deploy contracts, mint NFT to regular contributor
-                // Action: Attempt to transfer NFT using `safeTransferFrom` by the regular contributor
-                // Expectation: Transfer fails, ownership remains unchanged
-                throw new Error("Test not implemented");
+                const {contributor: regularContributor, third: recipient} = await getSigners();
+                const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+                // A regular contributor submits a dataset and receives an NFT
+                const uri = "https://example.com/regular-contributor-dataset";
+                await datasetRegistry.connect(regularContributor).submit(uri);
+
+                const datasetId = 1; // Assuming this is the first dataset and hence the NFT ID is 1
+
+                // Verify the initial owner of the NFT is the regular contributor
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(regularContributor.address);
+
+                // Attempt to transfer NFT from regular contributor to recipient
+                // Expect the attempt to fail due to restrictions on transfer by regular contributors
+                const action = datasetRegistry.connect(regularContributor).safeTransferFrom(regularContributor.address, recipient.address, datasetId);
+                await expect(action).to.be.revertedWithCustomError(datasetRegistry, "ERC721InsufficientApproval");
+
+                // Verify the owner of the NFT has not changed
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(regularContributor.address);
             });
         });
 
         describe("Transfer Attempt by Non-owners", function () {
-            it("Should not allow non-owners to transfer NFTs, regardless of their role", async () => {
-                // Setup: Deploy contracts, mint NFT to an expert contributor, another account tries to transfer
-                // Action: Attempt to transfer NFT using `safeTransferFrom` by another account (non-owner)
-                // Expectation: Transfer fails
-                throw new Error("Test not implemented");
+            it("Should not allow third party to transfer", async () => {
+                const {expertContributor, third} = await getSigners();
+                const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+                // An expert contributor submits a dataset and receives an NFT
+                const uri = "https://example.com/expert-dataset";
+                await datasetRegistry.connect(expertContributor).submit(uri);
+
+                const datasetId = 1; // Assuming this is the first dataset and hence the NFT ID is 1
+
+                // Verify the initial owner of the NFT is the expert contributor
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(expertContributor.address);
+
+                // Attempt to transfer NFT from a non-owner third party account
+                // Expect the attempt to fail due to the third party not owning the NFT
+                const action = datasetRegistry.connect(third).safeTransferFrom(expertContributor.address, third.address, datasetId);
+                await expect(action).to.be.revertedWithCustomError(datasetRegistry, "ERC721InsufficientApproval");
+
+                // Verify the owner of the NFT has not changed
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(expertContributor.address);
+            });
+
+            it("Should not allow non-owner to transfer, even the original contributor", async () => {
+                const {expertContributor, third} = await getSigners();
+                const {datasetRegistry} = await deployDatasetRegistryFixture();
+
+                // An expert contributor submits a dataset on behalf of a third party
+                const uri = "https://example.com/expert-dataset";
+                await datasetRegistry.connect(expertContributor).submitFor(third.address, uri);
+
+                const datasetId = 1; // Assuming this is the first dataset and hence the NFT ID is 1
+
+                // Verify the initial owner of the NFT is the third party
+                // but the original contributor is the expertContributor
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(third.address);
+                expect(await datasetRegistry.getOriginalContributor(datasetId)).to.equal(expertContributor.address);
+
+                // The expert contributor, who is not the current owner, attempts to transfer the NFT back to themselves
+                const action = datasetRegistry.connect(expertContributor).safeTransferFrom(third.address, expertContributor.address, datasetId);
+
+                // Expect the attempt to fail due to the expert contributor not having ownership or approval
+                await expect(action).to.be.revertedWithCustomError(datasetRegistry, "ERC721InsufficientApproval");
+
+                // Verify the owner of the NFT has not changed and remains with the third party
+                expect(await datasetRegistry.ownerOf(datasetId)).to.equal(third.address);
             });
         });
 
