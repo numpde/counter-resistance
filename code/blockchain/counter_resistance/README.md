@@ -63,4 +63,33 @@ This document briefly outlines the smart contract specifications for the Antimic
   - Utilizes ERC-1155 for a flexible, multi-token standard.
   - Tracks and issues reputation tokens based on activities.
 
-This draft summarizes the core components of the AMR Data Collection Ecosystem's smart contract architecture, foundational to enhancing global health security against antimicrobial resistance.
+
+## Permissions
+
+### ContributionRegistry
+
+Contribution requires a regular `CONTRIBUTOR_ROLE` or an `EXPERT_CONTRIBUTOR_ROLE`. 
+Regular contributors can contribute in their own name only.
+Expert contributors can contribute on other's behalf
+(see `_requireCanContribute`).
+
+Per the OpenZeppelin implementation, transferring ownership of or burning an ERC-721 token
+requires that the (non-zero) operator
+be the current owner (`_ownerOf`),
+is approved by the owner for all their tokens (`isApprovedForAll`),
+or is the approved operator for the specific token (`_getApproved`),
+although
+the function to `_burn` is internal;
+the function to `_setTokenURI` is internal.
+This contract overrides that logic:
+By default,
+transferring ownership of a contribution is allowed
+only 
+for the current owner who is also the original contributor and an expert contributor,
+regardless of approvals
+(see `_isAuthorized`);
+deleting a contribution is not implemented;
+the contribution's URI can be set using
+`setContributionURI`
+if the caller is the current owner and has either contributor role
+(see `_requireCanSetURI`).
