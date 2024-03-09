@@ -34,7 +34,7 @@ contract ProfileRegistry is ContributionRegistry {
      * @dev Automatically grants the CONTRIBUTOR_ROLE to the caller
      * before proceeding with the contribution. Contributions are to self.
      * @param uri The URI for the contribution metadata.
-     * @return contributionId The ID of the newly created contribution.
+     * @return profileId The ID of the newly created contribution.
      */
     function addProfile(string memory uri) public returns (uint256 profileId) {
         _selfGrantContributorRole();  // emits if role is newly granted
