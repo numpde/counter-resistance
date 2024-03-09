@@ -10,7 +10,7 @@ import {NotImplementedError} from "@nomicfoundation/hardhat-ethers/internal/erro
 import {experimentalAddHardhatNetworkMessageTraceHook} from "hardhat/config"; //Added for revertWithCustomErrors
 
 async function deployDatasetRegistryFixture() {
-    const {deployer, contributor, expertContributor, pauser} = await getSigners();
+    const {deployer, contributor, expertContributor, pauser, upgrader} = await getSigners();
     const DatasetRegistry = await ethers.getContractFactory("DatasetRegistry");
 
     const datasetRegistry = await upgrades.deployProxy(
@@ -24,19 +24,25 @@ async function deployDatasetRegistryFixture() {
     await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
     await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address);
 
+    await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), pauser.address);
+    await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRACT_UPGRADER_ROLE(), upgrader.address);
+
     return {datasetRegistry};
 }
 
 describe("DatasetRegistry", function () {
     describe("Deployment fixture", function () {
         it("Should assign roles", async function () {
-            const {contributor, expertContributor, pauser} = await getSigners();
+            const {contributor, expertContributor, pauser, upgrader} = await getSigners();
             const {datasetRegistry} = await deployDatasetRegistryFixture();
 
             // [*] See "Roles assigned during fixture"
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), pauser.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address)).to.equal(true);
+
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_PAUSER_ROLE(), pauser.address)).to.equal(true);
+            expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_UPGRADER_ROLE(), upgrader.address)).to.equal(true);
         });
     });
 
@@ -60,6 +66,51 @@ describe("DatasetRegistry", function () {
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRACT_UPGRADER_ROLE(), deployer.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.CONTRIBUTOR_ROLE_MANAGER(), deployer.address)).to.equal(true);
             expect(await datasetRegistry.hasRole(await datasetRegistry.EXPERT_CONTRIBUTOR_ROLE_MANAGER(), deployer.address)).to.equal(true);
+        });
+    });
+
+    describe("Upgradeability", function () {
+        it("Should allow contract upgrades by an account with UPGRADER_ROLE", async () => {
+            const {deployer, contributor, upgrader} = await getSigners();
+
+            // Deploy the initial version of the DatasetRegistry contract with the deployer account
+            const DatasetRegistry = await ethers.getContractFactory("ContributionRegistry", deployer);
+            const datasetRegistry = await upgrades.deployProxy(DatasetRegistry, {kind: 'uups'});
+
+            // Grant the upgrader role to upgrader
+            await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRACT_UPGRADER_ROLE(), upgrader.address);
+            // Grant the contributor role to contributor
+            await datasetRegistry.connect(deployer).grantRole(await datasetRegistry.CONTRIBUTOR_ROLE(), contributor.address);
+
+            // Prepare the same contract as a new version for the upgrade
+            // This demonstrates the upgrade mechanism rather than functionality change
+            const DatasetRegistryUpdated = await ethers.getContractFactory("DatasetRegistry", upgrader);
+
+            // Attempt to upgrade the contract with the upgrader account
+            const datasetRegistryUpdated = await upgrades.upgradeProxy(datasetRegistry, DatasetRegistryUpdated);
+
+            const hasSubmit = ((fragment: any) => ((fragment.name === 'submit') && (fragment.type === 'function')));
+
+            // Before the upgrade, there is not function `submit`; after the upgrade, there is.
+            expect(datasetRegistry.interface.fragments.some(hasSubmit)).to.be.false;
+            expect(datasetRegistryUpdated.interface.fragments.some(hasSubmit)).to.be.true;
+        });
+
+        it("Should prevent contract upgrades by unauthorized accounts", async () => {
+            const {deployer, third} = await getSigners();
+
+            // Deploy the initial version of the ContributionRegistry contract with the deployer account
+            const ContributionRegistry = await ethers.getContractFactory("ContributionRegistry", deployer);
+            const contributionRegistry = await upgrades.deployProxy(ContributionRegistry, {kind: 'uups'});
+
+            // Prepare the same contract as a new version for the "upgrade"
+            // This is to demonstrate the upgrade mechanism, not functionality change
+            const ContributionRegistryUpdated = await ethers.getContractFactory("ContributionRegistry", third);
+
+            // Attempt to upgrade the contract with an unauthorized account
+            // This should fail due to lack of permissions
+            const action = upgrades.upgradeProxy(contributionRegistry, ContributionRegistryUpdated, {from: third.address});
+            await expect(action).to.be.revertedWithCustomError(contributionRegistry, "AccessControlUnauthorizedAccount");
         });
     });
 
@@ -428,26 +479,6 @@ describe("DatasetRegistry", function () {
 
             const originalContributor = await datasetRegistry.getOriginalContributor(datasetId);
             expect(originalContributor).to.equal(expertContributor.address);
-        });
-    });
-
-    describe("Upgradeability", function () {
-        it("Should allow contract upgrades by an account with UPGRADER_ROLE", async () => {
-            // Setup: Deploy the initial version of the contract
-            // Grant UPGRADER_ROLE to a specific account
-            // Prepare the new version of the contract
-            // Action: Attempt to upgrade the contract using the account with UPGRADER_ROLE
-            // Expectation: Upgrade is successful, contract version is updated
-            throw new Error("Test not implemented");
-        });
-
-        it("Should prevent contract upgrades by unauthorized accounts", async () => {
-            // Setup: Deploy the initial version of the contract
-            // Ensure an account does not have UPGRADER_ROLE
-            // Prepare the new version of the contract
-            // Action: Attempt to upgrade the contract using the unauthorized account
-            // Expectation: Upgrade fails, contract version remains unchanged
-            throw new Error("Test not implemented");
         });
     });
 
