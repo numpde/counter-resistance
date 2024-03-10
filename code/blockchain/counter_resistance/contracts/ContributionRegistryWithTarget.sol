@@ -77,6 +77,19 @@ contract ContributionRegistryWithTarget is ContributionRegistry {
     }
 
     /**
+     * @dev Associates a target with a contribution, callable by DEFAULT_ADMIN_ROLE only.
+     * @param contributionId The ID of the contribution.
+     * @param target The target details.
+     */
+    function setTarget(uint256 contributionId, Target calldata target)
+    external
+    whenNotPaused
+    onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _setTarget(contributionId, target);
+    }
+
+    /**
      * @dev Retrieves the target associated with a contribution ID.
      * @param contributionId The ID of the contribution.
      * @return The target details.
