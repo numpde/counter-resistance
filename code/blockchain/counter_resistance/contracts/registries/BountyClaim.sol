@@ -2,18 +2,18 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "../ContributionRegistryWithRef.sol";
+import "../ContributionRegistryWithTarget.sol";
 
 /**
  * @title BountyClaimRegistry
  * @dev Inherits from ContributionRegistryWithRef to specifically handle the registration and management of bounty claims. It introduces functionalities to manage funding claims associated with various contributions within the ecosystem. Each claim is registered as an NFT to facilitate ownership and transferability.
  */
-contract BountyClaimRegistry is ContributionRegistryWithRef {
+contract BountyClaimRegistry is ContributionRegistryWithTarget {
     /**
      * @dev Initializes the contract by setting up its name and symbol and invoking initialization of the base ContributionRegistryWithRef contract. This setup is crucial for the ERC721 part of the contract that handles the NFT representation of bounty claims.
      */
     function initialize() public override initializer {
-        ContributionRegistryWithRef.initialize();
+        ContributionRegistryWithTarget.initialize();
         __ERC721_init("Bounty claim registry", "CLAIM");
     }
 

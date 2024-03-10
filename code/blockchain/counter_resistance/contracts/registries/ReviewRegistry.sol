@@ -2,15 +2,15 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "../ContributionRegistryWithRef.sol";
+import "../ContributionRegistryWithTarget.sol";
 
 /**
  * @title ReviewRegistry
  * @dev Extends ContributionRegistryWithRef to manage reviews. A "contribution" and a "review" are synonymous here.
  */
-contract ReviewRegistry is ContributionRegistryWithRef {
+contract ReviewRegistry is ContributionRegistryWithTarget {
     function initialize() public override initializer {
-        ContributionRegistryWithRef.initialize();
+        ContributionRegistryWithTarget.initialize();
         __ERC721_init("Review registry", "REVU");
     }
 
