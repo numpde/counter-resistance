@@ -17,9 +17,9 @@ contract DatasetRegistry is ContributionRegistry {
      * @param uri The URI for the dataset metadata.
      * @return datasetId The ID of the contribution.
      */
-    function submitFor(address to, string memory uri) public returns (uint256 datasetId)
+    function submit(address to, string memory uri) public returns (uint256 datasetId)
     {
-        datasetId = _contribute(to, uri);
+        datasetId = contribute(to, uri);
     }
 
     /**
@@ -29,7 +29,7 @@ contract DatasetRegistry is ContributionRegistry {
      */
     function submit(string memory uri) public returns (uint256 datasetId)
     {
-        datasetId = submitFor(_msgSender(), uri);
+        datasetId = contribute(_msgSender(), uri);
     }
 
     function initialize() override initializer public {

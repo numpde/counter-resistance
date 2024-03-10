@@ -75,7 +75,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     }
 
     //
-    // Role management.
+    // Role management helpers.
     //
 
     /**
@@ -83,7 +83,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * Can only be called by an account with the EXPERT_CONTRIBUTOR_ROLE_MANAGER.
      * @param expertContributor Address of the new expert contributor to be granted the role.
      */
-    function grantExpertContributorRole(address expertContributor) public onlyRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER) {
+    function grantExpertContributorRole(address expertContributor) public whenNotPaused onlyRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER) {
         _grantRole(EXPERT_CONTRIBUTOR_ROLE, expertContributor);
 
         emit ExpertContributorRoleGrantedByManager(_msgSender(), expertContributor);
@@ -94,7 +94,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * Can only be called by an account with the EXPERT_CONTRIBUTOR_ROLE_MANAGER.
      * @param expertContributor Address of the expert contributor to have the role revoked.
      */
-    function revokeExpertContributorRole(address expertContributor) public onlyRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER) {
+    function revokeExpertContributorRole(address expertContributor) public whenNotPaused onlyRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER) {
         _revokeRole(EXPERT_CONTRIBUTOR_ROLE, expertContributor);
 
         emit ExpertContributorRoleRevokedByManager(_msgSender(), expertContributor);
@@ -105,7 +105,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * Can only be called by an account with the CONTRIBUTOR_ROLE_MANAGER.
      * @param contributor Address of the new contributor to be granted the role.
      */
-    function grantContributorRole(address contributor) public onlyRole(CONTRIBUTOR_ROLE_MANAGER) {
+    function grantContributorRole(address contributor) public whenNotPaused onlyRole(CONTRIBUTOR_ROLE_MANAGER) {
         _grantRole(CONTRIBUTOR_ROLE, contributor);  // Does not emit if already granted
 
         emit ContributorRoleGrantedByManager(_msgSender(), contributor);
@@ -116,7 +116,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * Can only be called by an account with the CONTRIBUTOR_ROLE_MANAGER.
      * @param contributor Address of the contributor to be revoked the role.
      */
-    function revokeContributorRole(address contributor) public onlyRole(CONTRIBUTOR_ROLE_MANAGER) {
+    function revokeContributorRole(address contributor) public whenNotPaused onlyRole(CONTRIBUTOR_ROLE_MANAGER) {
         _revokeRole(CONTRIBUTOR_ROLE, contributor);  // Does not emit if already revoked
 
         emit ContributorRoleRevokedByManager(_msgSender(), contributor);
@@ -213,8 +213,8 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
      * @param uri The URI for the contribution metadata.
      * @return contributionId The ID of the newly minted contribution.
      */
-    function _contribute(address to, string memory uri)
-    internal
+    function contribute(address to, string memory uri)
+    public
     virtual
     whenNotPaused
     returns (uint256 contributionId)

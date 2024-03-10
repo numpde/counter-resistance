@@ -38,6 +38,6 @@ contract ProfileRegistry is ContributionRegistry {
      */
     function addProfile(string memory uri) public returns (uint256 profileId) {
         _selfGrantContributorRole();  // emits if role is newly granted
-        profileId = super._contribute(_msgSender(), uri);  // emits
+        profileId = super.contribute(_msgSender(), uri);  // emits
     }
 }

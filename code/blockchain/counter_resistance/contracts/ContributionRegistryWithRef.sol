@@ -49,19 +49,20 @@ contract ContributionRegistryWithRef is ContributionRegistry {
      * @param targetRef The details of the target reference.
      * @return contributionId The unique identifier of the newly minted contribution.
      */
-    function _contribute(address to, string memory uri, TargetRef memory targetRef)
-    internal
+    function contribute(address to, string memory uri, TargetRef memory targetRef)
+    public
+    virtual
     whenNotPaused
     returns (uint256 contributionId)
     {
-        contributionId = super._contribute(to, uri);
+        contributionId = super.contribute(to, uri);
         _setTargetRef(contributionId, targetRef);
     }
 
     /**
      * @dev Disables `_contribute` without a targetRef and reverts with `TargetRefRequired`.
      */
-    function _contribute(address /*to*/, string memory /*uri*/) internal pure override returns (uint256) {
+    function contribute(address /*to*/, string memory /*uri*/) public pure override returns (uint256) {
         revert TargetRefRequired();
     }
 
