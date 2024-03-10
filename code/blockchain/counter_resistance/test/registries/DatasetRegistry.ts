@@ -4,8 +4,6 @@ const {expect} = require("chai");
 const {ethers, upgrades} = require("hardhat");
 
 import "@nomicfoundation/hardhat-chai-matchers";
-import {EventLog, ZeroAddress} from "ethers";
-import {LogDescription} from "ethers/src.ts/abi/interface";
 
 async function deployDatasetRegistryFixture() {
     const {deployer, contributor, expertContributor, pauser, upgrader} = await getSigners();
