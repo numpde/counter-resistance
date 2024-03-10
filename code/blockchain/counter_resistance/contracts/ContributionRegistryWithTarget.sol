@@ -33,6 +33,7 @@ contract ContributionRegistryWithTarget is ContributionRegistry {
     /// @dev Error indicating that a target is required but not provided.
     error TargetRequired();
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
@@ -67,7 +68,7 @@ contract ContributionRegistryWithTarget is ContributionRegistry {
     }
 
     /**
-     * @dev Associates a target with a contribution ID.
+     * @dev Associates a target with a contribution.
      * @param contributionId The ID of the contribution.
      * @param target The target details.
      */
