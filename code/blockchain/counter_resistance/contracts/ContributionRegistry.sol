@@ -12,6 +12,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @custom:security-contact hello@counter-resistance.org
 contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, ERC721PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+    address public companionAddress;
+
     uint256 private _nextContributionId;
     mapping(uint256 => address) private _originalContributor;
 
@@ -25,6 +27,7 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     bytes32 public constant EXPERT_CONTRIBUTOR_ROLE_MANAGER = keccak256("EXPERT_CONTRIBUTOR_ROLE_MANAGER");
 
     error Disabled();
+    error NotCompanion(address caller);
     error NotContributor(address caller);
     error CannotContributeForOthers(address caller, address intendedContributor);
     error NotAuthorizedToUpdateMetadata(address caller, uint256 contributionId);
@@ -44,7 +47,9 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
         _disableInitializers();
     }
 
-    function initialize() public virtual initializer {
+    function initialize(address companion) public virtual initializer {
+        companionAddress = companion;
+
         _nextContributionId = 1;
 
         __ERC721_init("Contribution registry", "CORE");
@@ -60,6 +65,18 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
 
         _grantRole(CONTRIBUTOR_ROLE_MANAGER, _msgSender());
         _grantRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER, _msgSender());
+    }
+
+    //
+    // Modifiers.
+    //
+
+    // Modifier to require caller to be the companion.
+    modifier onlyCompanion() {
+        if (_msgSender() != companionAddress) {
+            revert NotCompanion(_msgSender());
+        }
+        _;
     }
 
     //
