@@ -7,55 +7,57 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import {EventLog, ZeroAddress} from "ethers";
 import {LogDescription} from "ethers/src.ts/abi/interface";
 
-async function deployContributionRegistryFixture() {
-    const {deployer, admin, contributor, expertContributor, pauser, upgrader} = await getSigners();
-    const ContributionRegistry = await ethers.getContractFactory("ContributionRegistry");
+async function deployContributionRegistryFixture(contractName: string = "ContributionRegistry") {
+    const {deployer, companion, admin, contributor, expertContributor, pauser, upgrader} = await getSigners();
+    const ContributionRegistry = await ethers.getContractFactory(contractName);
 
-    const contributionRegistry = await upgrades.deployProxy(
+    const contract = await upgrades.deployProxy(
         ContributionRegistry.connect(deployer),
-        [],
+        [
+            companion.address,
+        ],
         {initializer: 'initialize'}
     );
 
     // Roles assigned during fixture [*]
-    await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.DEFAULT_ADMIN_ROLE(), admin.address);
-    await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address);
-    await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address);
-    await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.CONTRACT_PAUSER_ROLE(), pauser.address);
-    await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.CONTRACT_UPGRADER_ROLE(), upgrader.address);
+    await contract.connect(deployer).grantRole(await contract.DEFAULT_ADMIN_ROLE(), admin.address);
+    await contract.connect(deployer).grantRole(await contract.CONTRIBUTOR_ROLE(), contributor.address);
+    await contract.connect(deployer).grantRole(await contract.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address);
+    await contract.connect(deployer).grantRole(await contract.CONTRACT_PAUSER_ROLE(), pauser.address);
+    await contract.connect(deployer).grantRole(await contract.CONTRACT_UPGRADER_ROLE(), upgrader.address);
 
-    return {contributionRegistry};
+    return {contract};
 }
 
 describe("ContributionRegistry", function () {
     describe("Deployment fixture", function () {
         it("Should assign roles", async function () {
             const {admin, contributor, expertContributor, pauser, upgrader} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+            const {contract} = await deployContributionRegistryFixture();
 
             // [*] See "Roles assigned during fixture"
-            expect(await contributionRegistry.hasRole(await contributionRegistry.DEFAULT_ADMIN_ROLE(), admin.address)).to.equal(true);
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.equal(true);
-            expect(await contributionRegistry.hasRole(await contributionRegistry.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address)).to.equal(true);
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRACT_PAUSER_ROLE(), pauser.address)).to.equal(true);
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRACT_UPGRADER_ROLE(), upgrader.address)).to.equal(true);
+            expect(await contract.hasRole(await contract.DEFAULT_ADMIN_ROLE(), admin.address)).to.equal(true);
+            expect(await contract.hasRole(await contract.CONTRIBUTOR_ROLE(), contributor.address)).to.equal(true);
+            expect(await contract.hasRole(await contract.EXPERT_CONTRIBUTOR_ROLE(), expertContributor.address)).to.equal(true);
+            expect(await contract.hasRole(await contract.CONTRACT_PAUSER_ROLE(), pauser.address)).to.equal(true);
+            expect(await contract.hasRole(await contract.CONTRACT_UPGRADER_ROLE(), upgrader.address)).to.equal(true);
         });
     });
 
     describe("Initialization", function () {
         it("Should initialize with the correct name and symbol", async function () {
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+            const {contract} = await deployContributionRegistryFixture();
 
             const expectedName = "Contribution registry";
             const expectedSymbol = "CORE";
 
-            expect(await contributionRegistry.name()).to.equal(expectedName);
-            expect(await contributionRegistry.symbol()).to.equal(expectedSymbol);
+            expect(await contract.name()).to.equal(expectedName);
+            expect(await contract.symbol()).to.equal(expectedSymbol);
         });
 
         it("Should assign roles to the deployer", async function () {
             const {deployer} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+            const {contract} = await deployContributionRegistryFixture();
 
             const roles = [
                 'DEFAULT_ADMIN_ROLE',
@@ -66,134 +68,253 @@ describe("ContributionRegistry", function () {
             ];
 
             for (const roleName of roles) {
-                const role = await contributionRegistry[roleName]();
-                expect(await contributionRegistry.hasRole(role, deployer.address)).to.equal(true);
+                const role = await contract[roleName]();
+                expect(await contract.hasRole(role, deployer.address)).to.equal(true);
             }
         });
     });
 
     describe("Upgradeability", function () {
         it("Should allow contract upgrades by an account with UPGRADER_ROLE", async () => {
-            const {deployer, contributor, upgrader} = await getSigners();
+            const {deployer, upgrader} = await getSigners();
 
-            // Deploy the initial version of the DatasetRegistry contract with the deployer account
-            const ContributionRegistry = await ethers.getContractFactory("ContributionRegistry", deployer);
-            const contributionRegistry = await upgrades.deployProxy(ContributionRegistry, {kind: 'uups'});
+            // Deploy the initial version of the ContributionRegistry contract with the deployer account
+            const {contract} = await deployContributionRegistryFixture("ContributionRegistry");
 
-            // Grant the upgrader role to upgrader
-            await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.CONTRACT_UPGRADER_ROLE(), upgrader.address);
-            // Grant the contributor role to contributor
-            await contributionRegistry.connect(deployer).grantRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address);
-
-            // Prepare the same contract as a new version for the upgrade
-            // This demonstrates the upgrade mechanism rather than functionality change
-            const DatasetRegistry = await ethers.getContractFactory("DatasetRegistry", upgrader);
+            // Authorize the upgrader
+            await contract.connect(deployer).grantRole(await contract.CONTRACT_UPGRADER_ROLE(), upgrader.address);
 
             // Attempt to upgrade the contract with the upgrader account
-            const datasetRegistry = await upgrades.upgradeProxy(contributionRegistry, DatasetRegistry);
+            const Upgrade = await ethers.getContractFactory("TestContributionRegistry", upgrader);
+            const upgraded = await upgrades.upgradeProxy(contract, Upgrade, [ZeroAddress]);
 
-            const isSubmit = ((fragment: any) => ((fragment.name === 'submit') && (fragment.type === 'function')));
-
-            // Before the upgrade, there is not function `submit`; after the upgrade, there is.
-            expect(contributionRegistry.interface.fragments.some(isSubmit)).to.be.false;
-            expect(datasetRegistry.interface.fragments.some(isSubmit)).to.be.true;
+            // Check presence of a specific function
+            expect(await upgraded.isTestContributionRegistry()).to.be.true;
         });
 
         it("Should prevent contract upgrades by unauthorized accounts", async () => {
-            const {deployer, third} = await getSigners();
+            const {third} = await getSigners();
 
             // Deploy the initial version of the ContributionRegistry contract with the deployer account
-            const ContributionRegistry = await ethers.getContractFactory("ContributionRegistry", deployer);
-            const contributionRegistry = await upgrades.deployProxy(ContributionRegistry, {kind: 'uups'});
-
-            // Prepare the same contract as a new version for the "upgrade"
-            // This is to demonstrate the upgrade mechanism, not functionality change
-            const DatasetRegistry = await ethers.getContractFactory("DatasetRegistry", third);
+            const {contract} = await deployContributionRegistryFixture("ContributionRegistry");
 
             // Attempt to upgrade the contract with an unauthorized account
             // This should fail due to lack of permissions
-            const action = upgrades.upgradeProxy(contributionRegistry, DatasetRegistry, {from: third.address});
-            await expect(action).to.be.revertedWithCustomError(contributionRegistry, "AccessControlUnauthorizedAccount");
+            const Upgrade = await ethers.getContractFactory("TestContributionRegistry", third);
+            const action = upgrades.upgradeProxy(contract, Upgrade, [ZeroAddress]);
+
+            // Expect the upgrade attempt to be reverted with an appropriate error message
+            await expect(action).to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
         });
     });
 
     describe("Role management", () => {
-        it("Should allow DEFAULT_ADMIN_ROLE to grant CONTRIBUTOR_ROLE", async () => {
-            const {contributor, admin} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+        describe("By the admin", () => {
+            it("Should allow DEFAULT_ADMIN_ROLE to grant CONTRIBUTOR_ROLE", async () => {
+                const {contributor, admin} = await getSigners();
+                const {contract} = await deployContributionRegistryFixture();
 
-            await contributionRegistry.connect(admin).grantRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address);
+                await contract.connect(admin).grantRole(await contract.CONTRIBUTOR_ROLE(), contributor.address);
 
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.be.true;
+                expect(await contract.hasRole(await contract.CONTRIBUTOR_ROLE(), contributor.address)).to.be.true;
+            });
+
+            it("Should prevent non-admins from granting CONTRIBUTOR_ROLE", async () => {
+                const {nonContributor, expertContributor} = await getSigners();
+                const {contract} = await deployContributionRegistryFixture();
+
+                await expect(
+                    contract.connect(expertContributor).grantRole(await contract.CONTRIBUTOR_ROLE(), nonContributor.address)
+                ).to.be.revertedWithCustomError(
+                    contract,
+                    "AccessControlUnauthorizedAccount"
+                );
+
+                expect(await contract.hasRole(await contract.CONTRIBUTOR_ROLE(), nonContributor.address)).to.be.false;
+            });
+
+            it("Should allow DEFAULT_ADMIN_ROLE to revoke CONTRIBUTOR_ROLE", async () => {
+                const {admin, contributor} = await getSigners();
+                const {contract} = await deployContributionRegistryFixture();
+
+                // First, grant the role, then revoke it
+                await contract.connect(admin).grantRole(await contract.CONTRIBUTOR_ROLE(), contributor.address);
+                await contract.connect(admin).revokeRole(await contract.CONTRIBUTOR_ROLE(), contributor.address);
+
+                expect(await contract.hasRole(await contract.CONTRIBUTOR_ROLE(), contributor.address)).to.be.false;
+            });
+
+            it("Should restrict role revocation to DEFAULT_ADMIN_ROLE", async () => {
+                const {admin, nonContributor, third} = await getSigners();
+                const {contract} = await deployContributionRegistryFixture();
+
+                // Grant the role, then attempt revocation by a non-admin
+                await contract.connect(admin).grantRole(await contract.CONTRIBUTOR_ROLE(), nonContributor.address);
+
+                const action = contract.connect(third).revokeRole(await contract.CONTRIBUTOR_ROLE(), nonContributor.address);
+                await expect(action).to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
+
+                // Verify the role was not revoked
+                expect(await contract.hasRole(await contract.CONTRIBUTOR_ROLE(), nonContributor.address)).to.equal(true);
+            });
+
+            it("Should allow transferring DEFAULT_ADMIN_ROLE", async () => {
+                const {admin, third} = await getSigners();
+                const {contract} = await deployContributionRegistryFixture();
+
+                await contract.connect(admin).grantRole(await contract.DEFAULT_ADMIN_ROLE(), third.address);
+                await contract.connect(admin).renounceRole(await contract.DEFAULT_ADMIN_ROLE(), admin.address);
+
+                // Verify the new admin has the role and the original deployer does not
+                expect(await contract.hasRole(await contract.DEFAULT_ADMIN_ROLE(), third.address)).to.be.true;
+                expect(await contract.hasRole(await contract.DEFAULT_ADMIN_ROLE(), admin.address)).to.be.false;
+            });
         });
 
-        it("Should prevent non-admins from granting CONTRIBUTOR_ROLE", async () => {
-            const {nonContributor, expertContributor} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+        describe("By a role manager", function () {
+            describe("Expert contributor role", function () {
+                it("Should not grant or revoke roles without proper authorization", async function () {
+                    // Setup: Deploy contract, prepare accounts
+                    const {manager, third} = await getSigners();
+                    const {contract} = await deployContributionRegistryFixture();
 
-            await expect(
-                contributionRegistry.connect(expertContributor).grantRole(await contributionRegistry.CONTRIBUTOR_ROLE(), nonContributor.address)
-            ).to.be.revertedWithCustomError(
-                contributionRegistry,
-                "AccessControlUnauthorizedAccount"
-            );
+                    const EXPERT_CONTRIBUTOR_ROLE_MANAGER = await contract.EXPERT_CONTRIBUTOR_ROLE_MANAGER();
 
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRIBUTOR_ROLE(), nonContributor.address)).to.be.false;
+                    // Verify manager does not have the _MANAGER role
+                    expect(await contract.hasRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER, manager.address)).to.be.false;
+
+                    // Check that manager cannot use grantExpertContributorRole
+                    await expect(contract.connect(manager).grantExpertContributorRole(third.address))
+                        .to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
+
+                    // ... or revokeExpertContributorRole
+                    await expect(contract.connect(manager).revokeExpertContributorRole(third.address))
+                        .to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
+                });
+
+                it("Should allow EXPERT_CONTRIBUTOR_ROLE_MANAGER to operate", async function () {
+                    // Setup: Deploy contract, prepare accounts
+                    const {admin, manager, third} = await getSigners();
+                    const {contract} = await deployContributionRegistryFixture();
+
+                    const EXPERT_CONTRIBUTOR_ROLE_MANAGER = await contract.EXPERT_CONTRIBUTOR_ROLE_MANAGER();
+                    const EXPERT_CONTRIBUTOR_ROLE = await contract.EXPERT_CONTRIBUTOR_ROLE();
+
+                    // ... and third does not have the EXPERT_CONTRIBUTOR_ROLE
+                    expect(await contract.hasRole(EXPERT_CONTRIBUTOR_ROLE, third.address)).to.be.false;
+
+                    // Grant the _MANAGER role, checking event emission
+                    await expect(contract.connect(admin).grantRole(EXPERT_CONTRIBUTOR_ROLE_MANAGER, manager.address))
+                        .to.emit(contract, 'RoleGranted')
+                        .withArgs(EXPERT_CONTRIBUTOR_ROLE_MANAGER, manager.address, admin.address);
+
+                    // Check that manager can now use grantExpertContributorRole
+                    await expect(contract.connect(manager).grantExpertContributorRole(third.address))
+                        .to.emit(contract, 'ExpertContributorRoleGrantedByManager')
+                        .withArgs(manager.address, third.address);
+
+                    // Check that the EXPERT_CONTRIBUTOR_ROLE role was granted to third
+                    expect(await contract.hasRole(EXPERT_CONTRIBUTOR_ROLE, third.address)).to.be.true;
+
+                    // Manager revokes the EXPERT_CONTRIBUTOR_ROLE from third, checking event emission
+                    await expect(contract.connect(manager).revokeExpertContributorRole(third.address))
+                        .to.emit(contract, 'ExpertContributorRoleRevokedByManager')
+                        .withArgs(manager.address, third.address);
+
+                    // Verify that third no longer has the EXPERT_CONTRIBUTOR_ROLE
+                    expect(await contract.hasRole(EXPERT_CONTRIBUTOR_ROLE, third.address)).to.be.false;
+                });
+            });
+
+            describe("Regular contributor role", function () {
+                it("Should not grant or revoke roles without proper authorization", async function () {
+                    // Setup: Deploy contract, prepare accounts
+                    const {manager, third} = await getSigners();
+                    const {contract} = await deployContributionRegistryFixture();
+
+                    const CONTRIBUTOR_ROLE_MANAGER = await contract.CONTRIBUTOR_ROLE_MANAGER();
+                    const CONTRIBUTOR_ROLE = await contract.CONTRIBUTOR_ROLE();
+
+                    // Verify manager does not have the CONTRIBUTOR_ROLE_MANAGER role
+                    expect(await contract.hasRole(CONTRIBUTOR_ROLE_MANAGER, manager.address)).to.be.false;
+
+                    // Check that manager cannot use grantContributorRole
+                    await expect(contract.connect(manager).grantContributorRole(third.address))
+                        .to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
+
+                    // ... or revokeContributorRole
+                    await expect(contract.connect(manager).revokeContributorRole(third.address))
+                        .to.be.revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
+                });
+
+                it("Should allow CONTRIBUTOR_ROLE_MANAGER to operate", async function () {
+                    // Setup: Deploy contract, prepare accounts
+                    const {admin, manager, third} = await getSigners();
+                    const {contract} = await deployContributionRegistryFixture();
+
+                    const CONTRIBUTOR_ROLE_MANAGER = await contract.CONTRIBUTOR_ROLE_MANAGER();
+                    const CONTRIBUTOR_ROLE = await contract.CONTRIBUTOR_ROLE();
+
+                    // ... and third does not have the CONTRIBUTOR_ROLE
+                    expect(await contract.hasRole(CONTRIBUTOR_ROLE, third.address)).to.be.false;
+
+                    // Grant the CONTRIBUTOR_ROLE_MANAGER role, checking event emission
+                    await expect(contract.connect(admin).grantRole(CONTRIBUTOR_ROLE_MANAGER, manager.address))
+                        .to.emit(contract, 'RoleGranted')
+                        .withArgs(CONTRIBUTOR_ROLE_MANAGER, manager.address, admin.address);
+
+                    // Check that manager can now use grantContributorRole
+                    await expect(contract.connect(manager).grantContributorRole(third.address))
+                        .to.emit(contract, 'ContributorRoleGrantedByManager')
+                        .withArgs(manager.address, third.address);
+
+                    // Check that the CONTRIBUTOR_ROLE role was granted to third
+                    expect(await contract.hasRole(CONTRIBUTOR_ROLE, third.address)).to.be.true;
+
+                    // Manager revokes the CONTRIBUTOR_ROLE from third, checking event emission
+                    await expect(contract.connect(manager).revokeContributorRole(third.address))
+                        .to.emit(contract, 'ContributorRoleRevokedByManager')
+                        .withArgs(manager.address, third.address);
+
+                    // Verify that third no longer has the CONTRIBUTOR_ROLE
+                    expect(await contract.hasRole(CONTRIBUTOR_ROLE, third.address)).to.be.false;
+                });
+            });
+        });
+    });
+
+    describe("Companion modifier", () => {
+        it("Should allow companion to call the function", async () => {
+            const {deployer, companion} = await getSigners();
+            const {contract} = await deployContributionRegistryFixture("TestContributionRegistry");
+
+            expect(await contract.connect(companion).onlyCompanion_test()).to.be.true;
         });
 
-        it("Should allow DEFAULT_ADMIN_ROLE to revoke CONTRIBUTOR_ROLE", async () => {
-            const {admin, contributor} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+        it("Should revert even for admin/deployer", async () => {
+            const {deployer, admin} = await getSigners();
+            const {contract} = await deployContributionRegistryFixture("TestContributionRegistry");
 
-            // First, grant the role, then revoke it
-            await contributionRegistry.connect(admin).grantRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address);
-            await contributionRegistry.connect(admin).revokeRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address);
-
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRIBUTOR_ROLE(), contributor.address)).to.be.false;
+            for (const who of [deployer, admin]) {
+                const action = contract.connect(who).onlyCompanion_test();
+                await expect(action).to.be.revertedWithCustomError(contract, "NotCompanion");
+            }
         });
-
-        it("Should restrict role revocation to DEFAULT_ADMIN_ROLE", async () => {
-            const {admin, nonContributor, third} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
-
-            // Grant the role, then attempt revocation by a non-admin
-            await contributionRegistry.connect(admin).grantRole(await contributionRegistry.CONTRIBUTOR_ROLE(), nonContributor.address);
-
-            const action = contributionRegistry.connect(third).revokeRole(await contributionRegistry.CONTRIBUTOR_ROLE(), nonContributor.address);
-            await expect(action).to.be.revertedWithCustomError(contributionRegistry, "AccessControlUnauthorizedAccount");
-
-            // Verify the role was not revoked
-            expect(await contributionRegistry.hasRole(await contributionRegistry.CONTRIBUTOR_ROLE(), nonContributor.address)).to.equal(true);
-        });
-
-        it("Should allow transferring DEFAULT_ADMIN_ROLE", async () => {
-            const {admin, third} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
-
-            await contributionRegistry.connect(admin).grantRole(await contributionRegistry.DEFAULT_ADMIN_ROLE(), third.address);
-            await contributionRegistry.connect(admin).renounceRole(await contributionRegistry.DEFAULT_ADMIN_ROLE(), admin.address);
-
-            // Verify the new admin has the role and the original deployer does not
-            expect(await contributionRegistry.hasRole(await contributionRegistry.DEFAULT_ADMIN_ROLE(), third.address)).to.be.true;
-            expect(await contributionRegistry.hasRole(await contributionRegistry.DEFAULT_ADMIN_ROLE(), admin.address)).to.be.false;
-        });
-
-        // TODO: _MANAGER roles
     });
 
     describe("Pausing functionality", () => {
         it("Should restrict pausing functionality to accounts with PAUSER_ROLE", async function () {
             const {expertContributor, third} = await getSigners();
-            const {contributionRegistry} = await deployContributionRegistryFixture();
+            const {contract} = await deployContributionRegistryFixture();
 
 
             const actions = [
-                contributionRegistry.connect(third).pause(),
-                contributionRegistry.connect(expertContributor).pause(),
+                contract.connect(third).pause(),
+                contract.connect(expertContributor).pause(),
             ];
 
             for (const action of actions) {
-                await expect(action).revertedWithCustomError(contributionRegistry, "AccessControlUnauthorizedAccount");
+                await expect(action).revertedWithCustomError(contract, "AccessControlUnauthorizedAccount");
             }
         });
     });
@@ -202,7 +323,7 @@ describe("ContributionRegistry", function () {
         describe("Submission", function () {
             it("Should allow an expert contributor to contribute, and emit a 'Contribution' event", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/dataset";
 
@@ -222,7 +343,7 @@ describe("ContributionRegistry", function () {
 
             it("Should allow a contributor to submit their own dataset and emit a 'Transfer' event", async () => {
                 const {contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/dataset";
                 const expectedTokenId = 1;
@@ -243,7 +364,7 @@ describe("ContributionRegistry", function () {
 
             it("Should allow also an expert contributor to contribute", async () => {
                 const {deployer, expertContributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // First, remove the "contributor" role, just in case
                 await contract.connect(deployer).revokeRole(await contract.CONTRIBUTOR_ROLE(), expertContributor.address);
@@ -257,7 +378,7 @@ describe("ContributionRegistry", function () {
 
             it("Should assign ownership and URI correctly to a contributor", async () => {
                 const {contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/dataset";
                 await contract.connect(contributor).contribute(contributor.address, uri);
@@ -270,7 +391,7 @@ describe("ContributionRegistry", function () {
 
             it("Should assign ownership and URI correctly by an expert contributor", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/dataset";
                 await contract.connect(expertContributor).contribute(third.address, uri);
@@ -283,7 +404,7 @@ describe("ContributionRegistry", function () {
 
             it("Should not allow a regular contributor to contribute for others", async () => {
                 const {third, contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 await expect(
                     contract.connect(contributor).contribute(third.address, "https://example.com/illicit-dataset")
@@ -294,7 +415,7 @@ describe("ContributionRegistry", function () {
 
             it("Should reject unauthorized dataset submission", async () => {
                 const {third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 await expect(
                     contract.connect(third).contribute(third.address, "https://example.com/illicit-dataset")
@@ -313,7 +434,7 @@ describe("ContributionRegistry", function () {
         describe("URI/metadata management", function () {
             it("Should allow a contributor to set the URI for their own contribution", async () => {
                 const {contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/dataset";
                 await contract.connect(contributor).contribute(contributor.address, uri);
@@ -332,7 +453,7 @@ describe("ContributionRegistry", function () {
 
             it("Should not allow an expert contributor to set the URI for other's contribution", async () => {
                 const {contributor, expertContributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // Submitting a dataset as a regular contributor
                 const uri = "https://example.com/dataset";
@@ -353,7 +474,7 @@ describe("ContributionRegistry", function () {
 
             it("Should not allow a contributor to set the URI for others's contribution", async () => {
                 const {contributor, expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // An expert contributor submits a dataset on behalf of a third party
                 const uri = "https://example.com/dataset-for-third";
@@ -377,7 +498,7 @@ describe("ContributionRegistry", function () {
         describe("Submission if contract is paused", () => {
             it("Should pause and prevent contribution submission/manipulation", async function () {
                 const {pauser, contributor, expertContributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 await contract.connect(expertContributor).contribute(expertContributor.address, "https://example.com/contribution-1")
 
@@ -397,7 +518,7 @@ describe("ContributionRegistry", function () {
 
             it("Should unpause and allow contribution", async function () {
                 const {pauser, contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 await contract.connect(pauser).pause();
                 expect(await contract.paused()).to.be.true;
@@ -413,7 +534,7 @@ describe("ContributionRegistry", function () {
         describe("Enumerable extension", function () {
             it("Should enumerate contributions", async () => {
                 const {contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const expectedTokenIds = [1n, 2n, 3n];
 
@@ -442,7 +563,7 @@ describe("ContributionRegistry", function () {
         describe("Tracking of the original contributor", function () {
             it("Should record the submitter as the original contributor when a contribution is submitted directly", async () => {
                 const {contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
                 const uri = "https://example.com/direct-submission";
 
                 await contract.connect(contributor).contribute(contributor.address, uri);
@@ -454,7 +575,7 @@ describe("ContributionRegistry", function () {
 
             it("Should record the submitter as the original contributor when a contribution is submitted", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/submission";
 
@@ -467,7 +588,7 @@ describe("ContributionRegistry", function () {
 
             it("Should keep the original contributor unchanged after ownership transfer", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/ownership-transfer";
                 await contract.connect(expertContributor).contribute(expertContributor.address, uri);
@@ -487,7 +608,7 @@ describe("ContributionRegistry", function () {
         describe("Transfer by expert contributors", function () {
             it("Should allow an expert contributor to transfer their own", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // An expert contributor contributes data and receives an NFT
                 const uri = "https://example.com/expert-contribution";
@@ -507,7 +628,7 @@ describe("ContributionRegistry", function () {
 
             it("Should not allow a regular contributor to transfer, even their own", async () => {
                 const {contributor: regularContributor, third: recipient} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // A regular contributor contributes data and receives an NFT
                 const uri = "https://example.com/regular-contributor-contribution";
@@ -531,7 +652,7 @@ describe("ContributionRegistry", function () {
         describe("Transfer by non-owners", function () {
             it("Should not allow third party to transfer", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // An expert contributor contributes data and receives an NFT
                 const uri = "https://example.com/expert-contribution";
@@ -553,7 +674,7 @@ describe("ContributionRegistry", function () {
 
             it("Should not allow non-owner to transfer, even the original contributor", async () => {
                 const {expertContributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // An expert contributor contributes data on behalf of a third party
                 const uri = "https://example.com/expert-contribution";
@@ -580,7 +701,7 @@ describe("ContributionRegistry", function () {
         describe("Transfer Attempt with Delegated Authority", function () {
             it("Should not allow expert contributors to delegate transfer authority", async () => {
                 const {deployer, expertContributor, contributor} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // An expert contributor contributes data and receives an NFT
                 const uri = "https://example.com/expert-contribution";
@@ -606,7 +727,7 @@ describe("ContributionRegistry", function () {
 
             it("Should not allow regular contributors to delegate transfer authority", async () => {
                 const {deployer, contributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // A regular contributor contributes data and receives an NFT
                 const uri = "https://example.com/regular-contribution";
@@ -630,7 +751,7 @@ describe("ContributionRegistry", function () {
         describe("Invalid Transfer Scenarios", function () {
             it("Should fail transfer if the token ID does not exist", async () => {
                 const {deployer, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 // Attempt to transfer NFT with a non-existent token ID
                 const nonexistentTokenId = 999; // Assuming this token ID does not exist
@@ -642,7 +763,7 @@ describe("ContributionRegistry", function () {
 
             it("Should fail transfer if the spender is not the owner nor the original contributor", async () => {
                 const {contributor, third} = await getSigners();
-                const {contributionRegistry: contract} = await deployContributionRegistryFixture();
+                const {contract: contract} = await deployContributionRegistryFixture();
 
                 const uri = "https://example.com/contribution";
                 await contract.connect(contributor).contribute(contributor.address, uri);
