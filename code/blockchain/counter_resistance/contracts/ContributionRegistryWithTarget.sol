@@ -38,8 +38,8 @@ contract ContributionRegistryWithTarget is ContributionRegistry {
         _disableInitializers();
     }
 
-    function initialize() public virtual override initializer {
-        ContributionRegistry.initialize();
+    function initialize(address companion) public virtual override initializer {
+        ContributionRegistry.initialize(companion);
     }
 
     /**
