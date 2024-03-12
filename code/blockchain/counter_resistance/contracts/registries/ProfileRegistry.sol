@@ -13,8 +13,8 @@ contract ProfileRegistry is ContributionRegistry {
         _disableInitializers();
     }
 
-    function initialize() override initializer public {
-        ContributionRegistry.initialize();
+    function initialize(address companion) public virtual override initializer {
+        ContributionRegistry.initialize(companion);
 
         // Reinitialize with specific name and symbol
         __ERC721_init("Whois registry", "WHOIS");
