@@ -338,6 +338,6 @@ contract ContributionRegistry is Initializable, ERC721Upgradeable, ERC721Enumera
     override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
     returns (string memory)
     {
-        return  metadata(tokenId);
+        return metadata(tokenId);
     }
 }
