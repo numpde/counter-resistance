@@ -12,8 +12,8 @@ contract BountyClaimRegistry is ContributionRegistryWithTarget {
     /**
      * @dev Initializes the contract by setting up its name and symbol and invoking initialization of the base ContributionRegistryWithRef contract. This setup is crucial for the ERC721 part of the contract that handles the NFT representation of bounty claims.
      */
-    function initialize() public override initializer {
-        ContributionRegistryWithTarget.initialize();
+    function initialize(address companion) public virtual override initializer {
+        ContributionRegistryWithTarget.initialize(companion);
         __ERC721_init("Bounty claim registry", "CLAIM");
     }
 
