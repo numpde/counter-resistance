@@ -38,11 +38,4 @@ contract DatasetRegistry is ContributionRegistry {
     {
         datasetId = contribute(_msgSender(), uri);
     }
-
-    function initialize() override initializer public {
-        ContributionRegistry.initialize();
-
-        // Reinitialize with specific name and symbol
-        __ERC721_init("Dataset registry", "DATA");
-    }
 }
