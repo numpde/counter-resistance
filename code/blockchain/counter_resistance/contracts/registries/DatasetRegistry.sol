@@ -11,6 +11,13 @@ contract DatasetRegistry is ContributionRegistry {
         _disableInitializers();
     }
 
+    function initialize(address companion) public virtual override initializer {
+        ContributionRegistry.initialize(companion);
+
+        // Reinitialize with specific name and symbol
+        __ERC721_init("Dataset registry", "DATA");
+    }
+
     /**
      * @dev Allows authorized users to submit a dataset.
      * @param to The address for whom the contribution is being made.
