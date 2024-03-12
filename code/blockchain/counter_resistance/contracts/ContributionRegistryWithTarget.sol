@@ -23,6 +23,8 @@ contract ContributionRegistryWithTarget is ContributionRegistry {
         uint256 targetId;
     }
 
+    bytes32 public constant CAN_RESET_TARGET = keccak256("CAN_RESET_TARGET");
+
     /// @dev Maps a contribution ID to its corresponding target.
     mapping(uint256 => Target) private _targets;
 
@@ -78,14 +80,14 @@ contract ContributionRegistryWithTarget is ContributionRegistry {
     }
 
     /**
-     * @dev Associates a target with a contribution, callable by DEFAULT_ADMIN_ROLE only.
+     * @dev Associates a target with a contribution, callable by `CAN_RESET_TARGET` role holder only.
      * @param contributionId The ID of the contribution.
      * @param target The target details.
      */
     function setTarget(uint256 contributionId, Target calldata target)
     external
     whenNotPaused
-    onlyRole(DEFAULT_ADMIN_ROLE)
+    onlyRole(CAN_RESET_TARGET)
     {
         _setTarget(contributionId, target);
     }
