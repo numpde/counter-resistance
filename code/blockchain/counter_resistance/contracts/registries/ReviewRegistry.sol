@@ -9,8 +9,8 @@ import "../ContributionRegistryWithTarget.sol";
  * @dev Extends ContributionRegistryWithRef to manage reviews. A "contribution" and a "review" are synonymous here.
  */
 contract ReviewRegistry is ContributionRegistryWithTarget {
-    function initialize() public override initializer {
-        ContributionRegistryWithTarget.initialize();
+    function initialize(address companion) public virtual override initializer {
+        ContributionRegistryWithTarget.initialize(companion);
         __ERC721_init("Review registry", "REVU");
     }
 
