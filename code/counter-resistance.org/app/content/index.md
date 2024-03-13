@@ -53,6 +53,53 @@ The AMR platform is not just a technological innovation; it's a beacon of hope i
 - **Commitment to the Future**: Promoting antibiotic stewardship, the platform is part of a broader commitment to ensure that these critical medicines remain effective for future generations. It's a moral imperative to act now, securing a legacy of health and well-being.
 
 
+# Existing Efforts to Combat AMR
+
+### [Global Antimicrobial Resistance Surveillance System (GLASS)](https://www.who.int/initiatives/glass)
+- **Similarities**: Like GLASS, we focus on global surveillance and standardized reporting to inform strategies against AMR.
+- **Differences**: Our platform utilizes blockchain for secure, transparent data submission and peer reviews, and offers incentives for contributions, a feature not present in GLASS.
+
+### [Antimicrobial Resistance Fighter Coalition](https://www.antimicrobialresistancefighters.org/)
+- **Similarities**: Both aim to raise awareness and mobilize action against AMR.
+- **Differences**: We provide a technological framework for data sharing and analysis, backed by blockchain, and offer financial incentives, whereas the Coalition focuses more on advocacy.
+
+### [CARB-X](https://carb-x.org/)
+- **Similarities**: CARB-X and our platform both encourage innovation in combating AMR.
+- **Differences**: While CARB-X funds research and development of new products, our platform facilitates data-driven predictive analytics and connects funding institutions with those in need, leveraging blockchain technology.
+
+### [National Antimicrobial Resistance Monitoring System (NARMS)](https://www.cdc.gov/narms/index.html)
+- **Similarities**: NARMS and our initiative both involve surveillance of AMR.
+- **Differences**: Our platform's global scope and blockchain integration for data submission and peer review extend beyond NARMS' focus on the US and food safety.
+
+### [Fleming Fund](https://www.flemingfund.org/)
+- **Similarities**: Both aim to support low- and middle-income countries in managing AMR data.
+- **Differences**: Besides funding, our platform enhances data sharing and analysis capabilities with blockchain technology and predictive analytics, encouraging richer institutions to support poorer ones.
+
+### [ResistanceMap by the Center for Disease Dynamics, Economics & Policy (CDDEP)](https://resistancemap.cddep.org/)
+- **Similarities**: Both initiatives offer data to inform public health strategies.
+- **Differences**: Our platform adds the dimension of blockchain-backed data management and community incentives for data submission and peer review.
+
+### [The AMR Register](https://amr.vivli.org/)
+- **Similarities**: The AMR Register, part of Vivli's initiative, also aims to share AMR surveillance data, facilitating global research and development efforts against AMR.
+- **Differences**: Unlike our platform, which integrates blockchain for data integrity and offers a comprehensive incentive model, The AMR Register primarily focuses on making industry-contributed surveillance data accessible for research purposes.
+
+### [AMR Industry Alliance](https://www.amrindustryalliance.org/)
+- **Similarities**: Similar to our platform's goals, the AMR Industry Alliance is committed to combating AMR through collaboration and innovation, involving stakeholders across the biotech, diagnostics, and pharmaceutical industries.
+- **Differences**: While the AMR Industry Alliance focuses on industry-driven efforts, including responsible antibiotic manufacturing and access, our platform leverages blockchain technology for data integrity, provides incentives for community engagement, and supports predictive analytics to drive global AMR strategies.
+
+### [Microreact](https://microreact.org/)
+- **Similarities**: Both platforms allow for the sharing and visualization of data.
+- **Differences**: We incorporate predictive analytics and blockchain-backed data management, plus a model to incentivize data sharing across institutions.
+
+### [SeqSphere+](http://www.ridom.de/seqsphere/)
+- **Similarities**: SeqSphere+ and our platform both support AMR surveillance through data collection and analysis.
+- **Differences**: Our approach includes blockchain for data integrity, a community-driven incentive system, and predictive analytics capabilities.
+
+### [Integrated BioBank of Luxembourg (IBBL)](https://www.ibbl.lu/)
+- **Similarities**: Both contribute to biomedical research with an emphasis on data and sample management.
+- **Differences**: Our platform extends beyond biospecimen management to include blockchain-enhanced data sharing, peer reviews, and a system designed to foster global support among institutions.
+
+
 # Potential Innovations
 
 Our AMR data platform is not just a repository of information -- it's a springboard for innovation, driving the creation of diverse companies dedicated to combating antimicrobial resistance. Explore the future of healthcare and technology, inspired by our data:
