@@ -1,6 +1,9 @@
 
 <div style="position: relative; text-align: center; color: white;">
-  <img src="/static/app/banner.png" width="100%" style="display: block; -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 20%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0) 100%); mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 20%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0) 100%);">
+  <img src="/static/app/banner.png" width="100%" style="display: block; 
+mask-image: 
+   radial-gradient(circle at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.1) 30%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0) 100%);
+"> 
 
   <div style="color: darkred; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5vw; font-weight: bold; white-space: nowrap; width: 80%;">
     Counter-Resistance
