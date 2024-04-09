@@ -211,18 +211,18 @@ Here's how these integrate into our platform and future-proof our ecosystem:
 
 # Join us
 
-We're looking for passionate individuals committed to making a difference, for example:
+We are in search of dedicated individuals eager to drive change in the following roles:
 
-- **Public Health Strategist**: Guides platform strategy with epidemiology and health policy expertise.
-- **Biostatistician/Data Modeler**: Focuses on AMR data analysis and forecasting.
-- **Blockchain Architect**: Develops a secure blockchain for data sharing.
-- **Clinical Microbiologist**: Provides expertise on pathogens and AMR for data validation.
-- **Systems Integration Engineer**: Integrates the platform with healthcare IT systems.
-- **Global Health Policy Advisor**: Advises on compliance and international health policy.
-- **Training Specialist**: Creates training programs for platform users.
-- **Outreach Director**: Manages partnerships and promotes adoption.
-- **Funding Expert**: Secures funding and strategizes financial sustainability.
-- **Adoption Lead**: Oversees platform implementation and adoption.
+- **Public Health Strategist**: Utilizes expertise in epidemiology and health policy to steer platform strategy.
+- **Biostatistician/Data Modeler**: Analyzes AMR data and predicts future trends.
+- **Blockchain Architect**: Crafts a secure blockchain infrastructure for reliable data exchange.
+- **Clinical Microbiologist**: Contributes pathogen and AMR knowledge for rigorous data verification.
+- **Systems Integration Engineer**: Merges our platform seamlessly with existing healthcare IT frameworks.
+- **Global Health Policy Advisor**: Offers guidance on global compliance and health policy matters.
+- **Training Specialist**: Designs comprehensive training materials for users.
+- **Outreach Director**: Fosters partnerships and enhances platform visibility.
+- **Funding Expert**: Identifies financial opportunities and develops sustainability strategies.
+- **Adoption Lead**: Ensures smooth platform rollout and widespread use.
 
 
 Let's build a sustainable, impactful platform that mobilizes global efforts against AMR, ensuring the health security of all nations.
